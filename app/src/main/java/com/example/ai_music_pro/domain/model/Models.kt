@@ -1,4 +1,6 @@
-package com.aimusic.domain.model
+package com.example.ai_music_pro.domain.model
+
+import com.google.gson.annotations.SerializedName
 
 data class User(
     val _id: String,
@@ -15,12 +17,18 @@ data class AuthResponse(
 
 data class Song(
     val _id: String,
+    @SerializedName("songName")
     val title: String,
+    @SerializedName("singerName")
     val artist: String,
+    @SerializedName("length")
     val duration: Long,
     val songUrl: String,
+    @SerializedName("thumbnailUrl")
     val coverUrl: String,
-    val category: String
+    val category: String,
+    val description: String? = null,
+    val playCount: Int = 0
 )
 
 data class PaginatedResponse<T>(

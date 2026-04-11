@@ -1,4 +1,4 @@
-package com.aimusic.ui.components
+package com.example.ai_music_pro.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.aimusic.domain.model.Song
+import com.example.ai_music_pro.domain.model.Song
 
 @Composable
 fun MiniPlayer(
@@ -29,14 +29,24 @@ fun MiniPlayer(
 ) {
     if (song == null) return
 
-    Column(
+    androidx.compose.material3.Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFF282828))
-            .clickable { onExpandClick() }
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        color = Color.White.copy(alpha = 0.08f),
+        shape = RoundedCornerShape(12.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            0.5.dp,
+            androidx.compose.ui.graphics.Brush.verticalGradient(
+                colors = listOf(Color.White.copy(alpha = 0.15f), Color.Transparent)
+            )
+        )
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onExpandClick() }
+        ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -85,5 +95,5 @@ fun MiniPlayer(
             color = MaterialTheme.colorScheme.primary,
             trackColor = Color.Transparent
         )
-    }
+    }}
 }

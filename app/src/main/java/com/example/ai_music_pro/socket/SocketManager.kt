@@ -1,10 +1,11 @@
-package com.aimusic.socket
+package com.example.ai_music_pro.socket
 
 import io.socket.client.IO
 import io.socket.client.Socket
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import org.json.JSONObject
+import java.net.URI
 import java.net.URISyntaxException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,7 +22,16 @@ class SocketManager @Inject constructor() {
     private val _syncEvents = MutableSharedFlow<SyncEvent>(extraBufferCapacity = 10)
     val syncEvents = _syncEvents.asSharedFlow()
 
-    private var serverNetworkOffsetMs: Long = 0L
+    var serverNetworkOffsetMs: Long = 0L
+        private set
+
+    fun getAdjustedTime(localTime: Long = System.currentTimeMillis()): Long {
+        return localTime - serverNetworkOffsetMs
+    }
+
+    fun getLocalTimeFromAdjusted(adjustedTime: Long): Long {
+        return adjustedTime + serverNetworkOffsetMs
+    }
 
     init {
         try {
@@ -29,7 +39,8 @@ class SocketManager @Inject constructor() {
                 forceNew = true
                 reconnection = true
             }
-            socket = IO.socket("ws://10.0.2.2:5002", options)
+            val uri = URI.create("http://192.168.1.7:5002")
+            socket = IO.socket(uri, options)
             setupListeners()
         } catch (e: URISyntaxException) {
             e.printStackTrace()
@@ -47,10 +58,17 @@ class SocketManager @Inject constructor() {
     private fun setupListeners() {
         socket?.apply {
             on(Socket.EVENT_CONNECT) {
-                // Connected
+                android.util.Log.d("SocketManager", "Connected to server")
+            }
+            on(Socket.EVENT_CONNECT_ERROR) { args ->
+                android.util.Log.e("SocketManager", "Connection error: ${args.getOrNull(0)}")
+            }
+            on(Socket.EVENT_DISCONNECT) {
+                android.util.Log.d("SocketManager", "Disconnected from server")
             }
             on("server_time") { args ->
-                val serverTime = (args[0] as Number).toLong()
+                val data = args[0] as JSONObject
+                val serverTime = data.getLong("serverTime")
                 val localTime = System.currentTimeMillis()
                 serverNetworkOffsetMs = localTime - serverTime
             }
@@ -71,16 +89,26 @@ class SocketManager @Inject constructor() {
                 _roomEvents.tryEmit(RoomEvent.UserLeft(data.getString("userId")))
             }
             on("sync_play") { args ->
-                val data = args[0] as JSONObject
-                _syncEvents.tryEmit(SyncEvent.Play(data.getLong("currentTime")))
+                (args.getOrNull(0) as? JSONObject)?.let { data ->
+                    val currentTime = data.optLong("currentTime", 0L)
+                    val songId = data.optString("songId", "")
+                    _syncEvents.tryEmit(SyncEvent.Play(currentTime, songId))
+                }
             }
             on("sync_pause") { args ->
-                val data = args[0] as JSONObject
-                _syncEvents.tryEmit(SyncEvent.Pause(data.getLong("currentTime")))
+                (args.getOrNull(0) as? JSONObject)?.let { data ->
+                    _syncEvents.tryEmit(SyncEvent.Pause(data.optLong("currentTime", 0L)))
+                }
             }
             on("sync_seek") { args ->
-                val data = args[0] as JSONObject
-                _syncEvents.tryEmit(SyncEvent.Seek(data.getLong("currentTime")))
+                (args.getOrNull(0) as? JSONObject)?.let { data ->
+                    _syncEvents.tryEmit(SyncEvent.Seek(data.optLong("currentTime", 0L)))
+                }
+            }
+            on("error") { args ->
+                (args.getOrNull(0) as? JSONObject)?.let { data ->
+                    _roomEvents.tryEmit(RoomEvent.Error(data.optString("message", "Unknown Error")))
+                }
             }
         }
     }
@@ -125,10 +153,11 @@ sealed class RoomEvent {
     object RoomFull : RoomEvent()
     data class UserJoined(val userId: String) : RoomEvent()
     data class UserLeft(val userId: String) : RoomEvent()
+    data class Error(val message: String) : RoomEvent()
 }
 
 sealed class SyncEvent {
-    data class Play(val currentTimeMs: Long) : SyncEvent()
+    data class Play(val currentTimeMs: Long, val songId: String) : SyncEvent()
     data class Pause(val currentTimeMs: Long) : SyncEvent()
     data class Seek(val currentTimeMs: Long) : SyncEvent()
 }

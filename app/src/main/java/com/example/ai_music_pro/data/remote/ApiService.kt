@@ -1,6 +1,6 @@
-package com.aimusic.data.remote
+package com.example.ai_music_pro.data.remote
 
-import com.aimusic.domain.model.*
+import com.example.ai_music_pro.domain.model.*
 import retrofit2.http.*
 
 interface ApiService {

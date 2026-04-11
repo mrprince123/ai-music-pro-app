@@ -1,0 +1,196 @@
+package com.example.ai_music_pro.ui.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.example.ai_music_pro.domain.model.Song
+import com.example.ai_music_pro.ui.theme.Dimens
+import com.example.ai_music_pro.ui.theme.LunkgemBlue
+
+@Composable
+fun TrendingSongCard(song: Song, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .width(160.dp)
+            .clickable(onClick = onClick)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(160.dp)
+                .clip(RoundedCornerShape(Dimens.RadiusMedium))
+                .border(
+                    width = 1.dp,
+                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                        colors = listOf(Color.White.copy(alpha = 0.2f), Color.Transparent)
+                    ),
+                    shape = RoundedCornerShape(Dimens.RadiusMedium)
+                )
+        ) {
+            AsyncImage(
+                model = song.coverUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+            Box(
+                modifier = Modifier
+                    .padding(Dimens.PaddingSmall)
+                    .size(Dimens.IconSizeLarge)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.2f))
+                    .border(0.5.dp, Color.White.copy(alpha = 0.3f), CircleShape)
+                    .padding(4.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = Color.Black,
+                    modifier = Modifier.size(Dimens.IconSizeSmall)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(Dimens.PaddingSmall))
+        Text(
+            text = song.title,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp,
+            maxLines = 1
+        )
+        Text(
+            text = song.artist,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            fontSize = 12.sp,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+fun PlaylistCard(song: Song, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .width(120.dp)
+            .clickable(onClick = onClick)
+    ) {
+        AsyncImage(
+            model = song.coverUrl,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(120.dp)
+                .clip(RoundedCornerShape(Dimens.RadiusMedium))
+        )
+        Spacer(modifier = Modifier.height(Dimens.PaddingSmall))
+        Text(
+            text = song.title,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 12.sp,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+fun SongListItem(song: Song, onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Dimens.PaddingDefault, vertical = Dimens.PaddingSmall / 2),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.05f),
+        shape = RoundedCornerShape(Dimens.RadiusSmall),
+        border = androidx.compose.foundation.BorderStroke(
+            0.5.dp, 
+            androidx.compose.ui.graphics.Brush.verticalGradient(
+                colors = listOf(Color.White.copy(alpha = 0.1f), Color.Transparent)
+            )
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(Dimens.PaddingSmall),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                model = song.coverUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(Dimens.RadiusSmall))
+            )
+            Spacer(modifier = Modifier.width(Dimens.PaddingDefault))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = song.title,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    maxLines = 1
+                )
+                Text(
+                    text = song.artist,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    fontSize = 14.sp,
+                    maxLines = 1
+                )
+            }
+            IconButton(onClick = onClick) {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(Dimens.IconSizeMedium)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SectionHeader(title: String, showSeeAll: Boolean = true, onSeeAllClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Dimens.PaddingDefault, vertical = Dimens.PaddingMedium),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
+        )
+        if (showSeeAll) {
+            Text(
+                text = "See all >",
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                fontSize = 12.sp,
+                modifier = Modifier.clickable { onSeeAllClick() }
+            )
+        }
+    }
+}

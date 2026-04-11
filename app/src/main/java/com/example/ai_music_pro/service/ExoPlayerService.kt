@@ -1,4 +1,6 @@
-package com.aimusic.service
+@file:Suppress("UnsafeOptInUsageError")
+
+package com.example.ai_music_pro.service
 
 import android.content.Intent
 import androidx.media3.common.MediaItem
@@ -6,14 +8,15 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
-import com.aimusic.domain.model.Song
-import com.aimusic.socket.SocketManager
+import com.example.ai_music_pro.domain.model.Song
+import com.example.ai_music_pro.socket.SocketManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import com.example.ai_music_pro.audio.EqualizerProvider
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -21,6 +24,9 @@ class ExoPlayerService : MediaSessionService() {
 
     @Inject
     lateinit var socketManager: SocketManager
+
+    @Inject
+    lateinit var equalizerProvider: EqualizerProvider
 
     private var exoPlayer: ExoPlayer? = null
     private var mediaSession: MediaSession? = null
@@ -31,9 +37,10 @@ class ExoPlayerService : MediaSessionService() {
         
         exoPlayer = ExoPlayer.Builder(this).build().apply {
             addListener(object : Player.Listener {
-                override fun onIsPlayingChanged(isPlaying: Boolean) {
-                    super.onIsPlayingChanged(isPlaying)
-                    // You could emit sync events from here if the local user is driving
+                override fun onPlaybackStateChanged(state: Int) {
+                    if (state == Player.STATE_READY) {
+                        equalizerProvider.equalizerManager.init(audioSessionId)
+                    }
                 }
             })
         }
@@ -52,15 +59,15 @@ class ExoPlayerService : MediaSessionService() {
         serviceScope.launch {
             socketManager.syncEvents.collectLatest { event ->
                 when (event) {
-                    is com.aimusic.socket.SyncEvent.Play -> {
+                    is com.example.ai_music_pro.socket.SyncEvent.Play -> {
                         exoPlayer?.seekTo(event.currentTimeMs)
                         exoPlayer?.play()
                     }
-                    is com.aimusic.socket.SyncEvent.Pause -> {
+                    is com.example.ai_music_pro.socket.SyncEvent.Pause -> {
                         exoPlayer?.seekTo(event.currentTimeMs)
                         exoPlayer?.pause()
                     }
-                    is com.aimusic.socket.SyncEvent.Seek -> {
+                    is com.example.ai_music_pro.socket.SyncEvent.Seek -> {
                         exoPlayer?.seekTo(event.currentTimeMs)
                     }
                 }
@@ -83,6 +90,7 @@ class ExoPlayerService : MediaSessionService() {
             release()
             mediaSession = null
         }
+        equalizerProvider.equalizerManager.release()
         super.onDestroy()
     }
 }

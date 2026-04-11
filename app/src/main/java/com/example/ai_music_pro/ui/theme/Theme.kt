@@ -1,34 +1,66 @@
-package com.aimusic.ui.theme
+package com.example.ai_music_pro.ui.theme
 
+import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
-
-val SpotifyDark = Color(0xFF121212)
-val SpotifyLightDark = Color(0xFF282828)
-val SpotifyGreen = Color(0xFF1DB954)
-val SpotifyWhite = Color(0xFFFFFFFF)
-val SpotifyGray = Color(0xFFB3B3B3)
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import com.example.ai_music_pro.ui.viewmodel.ThemeMode
 
 private val DarkColorScheme = darkColorScheme(
     primary = SpotifyGreen,
-    background = SpotifyDark,
-    surface = SpotifyLightDark,
-    onPrimary = SpotifyWhite,
-    onBackground = SpotifyWhite,
-    onSurface = SpotifyWhite,
-    secondary = SpotifyGray
+    secondary = SurfaceGray,
+    tertiary = CardBackground,
+    background = DeepBlack,
+    surface = SurfaceGray,
+    onPrimary = Color.Black,
+    onSecondary = Color.White,
+    onBackground = Color.White,
+    onSurface = Color.White
+)
+
+private val LightColorScheme = lightColorScheme(
+    primary = SpotifyGreen,
+    secondary = Color(0xFFF2F2F7),
+    tertiary = Color.White,
+    background = Color.White,
+    surface = Color(0xFFF2F2F7),
+    onPrimary = Color.Black,
+    onSecondary = Color.Black,
+    onBackground = Color.Black,
+    onSurface = Color.Black
 )
 
 @Composable
 fun AIMusicProTheme(
+    themeMode: ThemeMode = ThemeMode.SYSTEM,
     content: @Composable () -> Unit
 ) {
-    // Force dark theme as per requirements
+    val darkTheme = when (themeMode) {
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    }
+
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            window.statusBarColor = colorScheme.background.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+        }
+    }
+
     MaterialTheme(
-        colorScheme = DarkColorScheme,
+        colorScheme = colorScheme,
+        typography = Typography, // Ensure Typography exists
         content = content
     )
 }
