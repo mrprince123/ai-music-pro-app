@@ -6,8 +6,17 @@ import retrofit2.http.*
 interface ApiService {
 
     // 1. Auth
+    @POST("/auth/register")
+    suspend fun register(@Body body: Map<String, String>): AuthResponse
+
     @POST("/auth/login")
     suspend fun login(@Body body: Map<String, String>): AuthResponse
+
+    @POST("/auth/google")
+    suspend fun googleLogin(@Body body: Map<String, String>): AuthResponse
+
+    @POST("/auth/phone")
+    suspend fun phoneLogin(@Body body: Map<String, String>): AuthResponse
 
     // 2. Songs (Public)
     @GET("/songs")
@@ -39,4 +48,8 @@ interface ApiService {
         @Path("id") albumId: String,
         @Body request: AddSongToAlbumRequest
     ): Album
+
+    // 5. Carousel
+    @GET("/carousel")
+    suspend fun getCarousels(): List<CarouselItem>
 }

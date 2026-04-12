@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -81,9 +82,10 @@ fun MiniPlayer(
             }
             IconButton(onClick = onPlayPauseClick) {
                 Icon(
-                    imageVector = Icons.Default.PlayArrow, // Replace with dynamic play/pause icon
+                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                     contentDescription = "Play/Pause",
-                    tint = Color.White
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
                 )
             }
         }

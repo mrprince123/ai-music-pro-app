@@ -4,16 +4,38 @@ import com.google.gson.annotations.SerializedName
 
 data class User(
     val _id: String,
+    val name: String,
     val email: String,
-    val role: String
+    val profilePhoto: String? = null,
+    val phoneNumber: String? = null,
+    val role: String,
+    val authProvider: String,
+    val createdAt: String? = null
 )
 
 data class AuthResponse(
     val token: String,
     val role: String,
+    val name: String,
     val email: String,
-    val _id: String
+    val profilePhoto: String? = null,
+    val phoneNumber: String? = null,
+    val _id: String,
+    val authProvider: String,
+    val createdAt: String? = null
 )
+
+
+data class UserProfile(
+    val _id: String,
+    val name: String,
+    val email: String = "",
+    val role: String = "user",
+    val authProvider: String = "email",
+    val profilePhoto: String? = null
+) {
+    val id: String get() = _id
+}
 
 data class Song(
     val _id: String,
@@ -55,4 +77,11 @@ data class CreateAlbumRequest(
 
 data class AddSongToAlbumRequest(
     val songId: String
+)
+
+data class CarouselItem(
+    val _id: String,
+    val image: String,
+    val title: String? = null,
+    val link: String? = null
 )

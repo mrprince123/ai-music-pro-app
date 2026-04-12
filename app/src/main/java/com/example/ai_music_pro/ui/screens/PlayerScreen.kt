@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,11 +46,16 @@ fun PlayerScreen(
     onSeek: (Float) -> Unit,
     onCloseClick: () -> Unit,
     onPreviousClick: () -> Unit,
-    onNextClick: () -> Unit
+    onNextClick: () -> Unit,
+    participants: List<com.example.ai_music_pro.domain.model.UserProfile> = emptyList(),
+    queue: List<String> = emptyList(),
+    allSongs: List<com.example.ai_music_pro.domain.model.Song> = emptyList(),
+    onRemoveQueueItem: (String) -> Unit = {}
 ) {
     if (song == null) return
 
     var showLyrics by remember { mutableStateOf(false) }
+    var showQueueSheet by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -122,8 +129,23 @@ fun PlayerScreen(
                 onPlayPauseClick = onPlayPauseClick,
                 onSeek = onSeek,
                 onPreviousClick = onPreviousClick,
-                onNextClick = onNextClick
+                onNextClick = onNextClick,
+                onQueueClick = { showQueueSheet = true }
             )
+        }
+
+        if (showQueueSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showQueueSheet = false },
+                dragHandle = { BottomSheetDefaults.DragHandle(color = Color.White.copy(alpha = 0.2f)) }
+            ) {
+                RoomQueueContent(
+                    participants = participants,
+                    queue = queue,
+                    allSongs = allSongs,
+                    onRemoveItem = onRemoveQueueItem
+                )
+            }
         }
     }
 }
@@ -167,7 +189,8 @@ fun PlayerControls(
     onPlayPauseClick: () -> Unit,
     onSeek: (Float) -> Unit,
     onPreviousClick: () -> Unit,
-    onNextClick: () -> Unit
+    onNextClick: () -> Unit,
+    onQueueClick: () -> Unit
 ) {
     Column {
         Slider(
@@ -192,7 +215,7 @@ fun PlayerControls(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { }) { Icon(Icons.Default.List, null, tint = MaterialTheme.colorScheme.onSurface) }
+            IconButton(onClick = onQueueClick) { Icon(Icons.Default.QueueMusic, null, tint = MaterialTheme.colorScheme.onSurface) }
             IconButton(onClick = onPreviousClick) { Icon(Icons.Default.SkipPrevious, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(Dimens.IconSizeLarge)) }
             
             Surface(
@@ -202,10 +225,10 @@ fun PlayerControls(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = null,
+                        imageVector = if (isPlaying) Icons.Default.PauseCircleFilled else Icons.Default.PlayCircleFilled,
+                        contentDescription = "Play/Pause",
                         tint = MaterialTheme.colorScheme.surface,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(64.dp)
                     )
                 }
             }
@@ -241,5 +264,60 @@ fun LyricsSection(song: Song) {
             fontWeight = FontWeight.Black,
             lineHeight = 36.sp
         )
+    }
+}
+
+@Composable
+fun RoomQueueContent(
+    participants: List<com.example.ai_music_pro.domain.model.UserProfile>,
+    queue: List<String>,
+    allSongs: List<com.example.ai_music_pro.domain.model.Song>,
+    onRemoveItem: (String) -> Unit
+) {
+    val queuedSongs = remember(queue, allSongs) {
+        queue.mapNotNull { id -> allSongs.find { it._id == id } }
+    }
+
+    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Text("Listening Now", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Row(modifier = Modifier.padding(vertical = 12.dp).fillMaxWidth()) {
+            participants.forEach { user ->
+                AsyncImage(
+                    model = user.profilePhoto ?: "https://ui-avatars.com/api/?name=${user.name}",
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp).clip(CircleShape).padding(4.dp)
+                )
+            }
+            if (participants.isEmpty()) Text("No other users joined yet", color = Color.Gray, fontSize = 12.sp)
+        }
+        
+        HorizontalDivider(color = Color.White.copy(alpha = 0.1f), modifier = Modifier.padding(vertical = 8.dp))
+        
+        Text("Queue", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
+            items(queuedSongs) { song ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AsyncImage(
+                        model = song.coverUrl,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp))
+                    )
+                    Column(modifier = Modifier.padding(horizontal = 12.dp).weight(1f)) {
+                        Text(song.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                        Text(song.artist, color = Color.Gray, fontSize = 12.sp, maxLines = 1)
+                    }
+                    IconButton(onClick = { onRemoveItem(song._id) }) {
+                        Icon(Icons.Default.Close, contentDescription = "Remove", tint = Color.Gray)
+                    }
+                }
+            }
+            if (queuedSongs.isEmpty()) {
+                item { Text("Nothing in the queue", color = Color.Gray, modifier = Modifier.padding(vertical = 24.dp)) }
+            }
+        }
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }

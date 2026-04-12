@@ -28,13 +28,17 @@ import com.example.ai_music_pro.ui.theme.Dimens
 @Composable
 fun SettingsScreen(
     onBackClick: () -> Unit,
+    onLogout: () -> Unit,
     themeViewModel: ThemeViewModel = hiltViewModel(),
-    eqViewModel: EqualizerViewModel = hiltViewModel()
+    eqViewModel: EqualizerViewModel = hiltViewModel(),
+    authViewModel: com.example.ai_music_pro.ui.auth.AuthViewModel = hiltViewModel()
 ) {
     val themeMode by themeViewModel.themeMode.collectAsState()
     val isEqEnabled by eqViewModel.isEnabled.collectAsState()
     val bands by eqViewModel.bands.collectAsState()
-    val presets by eqViewModel.presets.collectAsState()
+    val authState by authViewModel.authState.collectAsState()
+    
+    val currentUser = (authState as? com.example.ai_music_pro.ui.auth.AuthState.Success)?.user
     
     var notifications by remember { mutableStateOf(true) }
 
@@ -100,6 +104,20 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(Dimens.PaddingLarge))
             Text(text = "Account", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), fontSize = 14.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(Dimens.PaddingDefault))
+            
+            currentUser?.let { user ->
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(Dimens.RadiusMedium),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.PaddingDefault)
+                ) {
+                    Column(modifier = Modifier.padding(Dimens.PaddingDefault)) {
+                        Text(text = user.name, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                        Text(text = user.email, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), fontSize = 12.sp)
+                    }
+                }
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -115,6 +133,21 @@ fun SettingsScreen(
             Text(text = "About AI Music Pro", color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(vertical = 8.dp))
             Text(text = "Privacy Policy", color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(vertical = 8.dp))
             Text(text = "Terms of Service", color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(vertical = 8.dp))
+
+            Spacer(modifier = Modifier.height(Dimens.PaddingLarge))
+            Button(
+                onClick = { 
+                    authViewModel.logout()
+                    onLogout()
+                },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.1f), contentColor = Color.Red),
+                shape = RoundedCornerShape(Dimens.RadiusMedium)
+            ) {
+                Text("Logout", fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.height(32.dp))
+
         }
     }
 }

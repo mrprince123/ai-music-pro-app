@@ -2,6 +2,7 @@ package com.example.ai_music_pro.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.ai_music_pro.R
+import com.example.ai_music_pro.domain.model.CarouselItem
 import com.example.ai_music_pro.domain.model.Song
 import com.example.ai_music_pro.ui.components.*
 import com.example.ai_music_pro.ui.theme.Dimens
@@ -35,6 +37,7 @@ import com.example.ai_music_pro.ui.theme.SurfaceGray
 fun HomeScreen(
     allSongs: List<Song>,
     filteredSongs: List<Song>,
+    carousels: List<CarouselItem>,
     onSongClick: (Song) -> Unit,
     onJoinRoom: (String) -> Unit,
     onCreateRoom: () -> Unit,
@@ -42,7 +45,8 @@ fun HomeScreen(
     onSearchQueryChange: (String) -> Unit,
     onSettingsClick: () -> Unit = {},
     currentRoomId: String? = null,
-    isLoading: Boolean = false
+    isLoading: Boolean = false,
+    onAddToQueue: (String) -> Unit = {}
 ) {
     var showRoomDialog by remember { mutableStateOf(false) }
     var showAllView by remember { mutableStateOf(false) }
@@ -113,38 +117,62 @@ fun HomeScreen(
                     )
                 }
 
-                item { BannerSection() }
+                item { BannerSection(carousels) }
 
+                // Categories Section
                 item {
-                    SectionHeader(title = "Popular Today", onSeeAllClick = { showAllView = true })
+                    Text(
+                        text = "Mood & Genres",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier.padding(16.dp)
+                    )
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        items(allSongs.take(5)) { song ->
-                            TrendingSongCard(song = song, onClick = { onSongClick(song) })
+                        val categories = listOf("Classic", "Romantic", "Rock", "Soul", "Pop")
+                        items(categories) { category ->
+                            CategoryItem(name = category, onClick = { onSearchQueryChange(category) })
                         }
                     }
                 }
 
-                item { Spacer(modifier = Modifier.height(32.dp)) }
-
+                // Popular Today Section
                 item {
-                    SectionHeader(title = "New Releases", onSeeAllClick = { showAllView = true })
-                }
-                items(allSongs.drop(5).take(4)) { song ->
-                    SongListItem(song = song, onClick = { onSongClick(song) })
-                }
-
-                item { Spacer(modifier = Modifier.height(32.dp)) }
-
-                item {
-                    SectionHeader(title = "Recommended For You", onSeeAllClick = { showAllView = true })
+                    SectionHeader(title = "Popular Today", onSeeAllClick = { })
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        items(allSongs.take(10)) { song ->
+                        items(allSongs.shuffled().take(6)) { song ->
+                            PlaylistCard(song = song, onClick = { onSongClick(song) })
+                        }
+                    }
+                }
+
+                // New Release Section
+                item {
+                    SectionHeader(title = "New Release", onSeeAllClick = { })
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(allSongs.reversed().take(6)) { song ->
+                            PlaylistCard(song = song, onClick = { onSongClick(song) })
+                        }
+                    }
+                }
+
+                // Recommended Section
+                item {
+                    SectionHeader(title = "Recommended for you", onSeeAllClick = { })
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(allSongs.take(6)) { song ->
                             PlaylistCard(song = song, onClick = { onSongClick(song) })
                         }
                     }
@@ -152,6 +180,32 @@ fun HomeScreen(
             }
         }
         item { Spacer(modifier = Modifier.height(100.dp)) }
+    }
+}
+
+@Composable
+fun CategoryItem(name: String, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.clickable { onClick() }
+    ) {
+        Box(
+            modifier = Modifier
+                .size(70.dp)
+                .clip(CircleShape)
+                .background(LunkgemBlue.copy(alpha = 0.1f))
+                .border(2.dp, LunkgemBlue.copy(alpha = 0.3f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.MusicNote,
+                contentDescription = null,
+                tint = LunkgemBlue,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(text = name, color = Color.Gray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
     }
 }
 

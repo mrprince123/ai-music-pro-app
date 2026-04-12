@@ -7,6 +7,7 @@ import com.example.ai_music_pro.data.local.dao.MusicDao
 import com.example.ai_music_pro.data.local.entities.LikedSongEntity
 import com.example.ai_music_pro.data.local.entities.LocalAlbumEntity
 import com.example.ai_music_pro.data.local.entities.SearchHistoryEntity
+import com.example.ai_music_pro.domain.model.CarouselItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -20,6 +21,15 @@ class SongRepository @Inject constructor(
     suspend fun getSongs(page: Int = 1, limit: Int = 20): Result<PaginatedResponse<Song>> {
         return try {
             val response = apiService.getSongs(page, limit)
+            Result.success(response)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getCarousels(): Result<List<CarouselItem>> {
+        return try {
+            val response = apiService.getCarousels()
             Result.success(response)
         } catch (e: Exception) {
             Result.failure(e)

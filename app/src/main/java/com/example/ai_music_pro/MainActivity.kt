@@ -31,6 +31,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import com.example.ai_music_pro.ui.screens.ProfileScreen
+import com.example.ai_music_pro.ui.screens.SearchScreen
 import com.example.ai_music_pro.ui.screens.*
 import com.example.ai_music_pro.ui.viewmodel.SongViewModel
 import com.example.ai_music_pro.ui.viewmodel.ThemeMode
@@ -47,6 +49,7 @@ import kotlinx.coroutines.isActive
 class MainActivity : ComponentActivity() {
     
     private val songViewModel: SongViewModel by viewModels()
+    private val authViewModel: com.example.ai_music_pro.ui.auth.AuthViewModel by viewModels()
     private val themeViewModel: com.example.ai_music_pro.ui.viewmodel.ThemeViewModel by viewModels()
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var controller: MediaController? = null
@@ -59,8 +62,13 @@ class MainActivity : ComponentActivity() {
             AIMusicProTheme(themeMode = themeMode) {
                 val songs by songViewModel.songs.collectAsState()
                 val filteredSongs by songViewModel.filteredSongs.collectAsState()
+                val carousels by songViewModel.carousels.collectAsState()
                 val searchQuery by songViewModel.searchQuery.collectAsState()
                 val currentRoomId by songViewModel.currentRoomId.collectAsState()
+                val participants by songViewModel.participants.collectAsState()
+                val queue by songViewModel.queue.collectAsState()
+                
+                val authState by authViewModel.authState.collectAsState()
                 
                 var showSplash by rememberSaveable { mutableStateOf(true) }
                 var showPlayer by remember { mutableStateOf(false) }
@@ -112,33 +120,20 @@ class MainActivity : ComponentActivity() {
 
                     Scaffold(
                         bottomBar = {
-                            if (!showPlayer) {
-                                NavigationBar(
-                                    containerColor = Color.White.copy(alpha = 0.05f),
-                                    tonalElevation = 0.dp,
-                                    modifier = Modifier.clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                                ) {
+                            val showBottomBar = currentRoute != Screen.Login.route && currentRoute != Screen.Signup.route
+                            if (!showPlayer && showBottomBar) {
+                                NavigationBar {
                                     bottomNavItems.forEach { screen ->
                                         NavigationBarItem(
-                                            icon = { Icon(screen.icon, contentDescription = screen.title) },
-                                            label = { Text(screen.title, fontSize = 10.sp) },
                                             selected = currentRoute == screen.route,
                                             onClick = {
                                                 navController.navigate(screen.route) {
-                                                    popUpTo(navController.graph.startDestinationId) {
-                                                        saveState = true
-                                                    }
+                                                    popUpTo(navController.graph.startDestinationId)
                                                     launchSingleTop = true
-                                                    restoreState = true
                                                 }
                                             },
-                                            colors = NavigationBarItemDefaults.colors(
-                                                selectedIconColor = MaterialTheme.colorScheme.primary,
-                                                unselectedIconColor = Color.White.copy(alpha = 0.4f),
-                                                selectedTextColor = MaterialTheme.colorScheme.primary,
-                                                unselectedTextColor = Color.White.copy(alpha = 0.4f),
-                                                indicatorColor = Color.Transparent
-                                            )
+                                            icon = { Icon(screen.icon!!, contentDescription = null) },
+                                            label = { Text(screen.title!!) }
                                         )
                                     }
                                 }
@@ -146,40 +141,63 @@ class MainActivity : ComponentActivity() {
                         }
                     ) { innerPadding ->
                         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
-                            NavHost(navController = navController, startDestination = Screen.Home.route) {
+                            val startDest = if (authViewModel.isLoggedIn()) Screen.Home.route else Screen.Login.route
+                            NavHost(
+                                navController = navController, 
+                                startDestination = startDest
+                            ) {
+
+                                composable(Screen.Login.route) {
+                                    LoginScreen(
+                                        onLoginClick = { email, pass -> authViewModel.login(email, pass) },
+                                        onRegisterClick = { navController.navigate(Screen.Signup.route) },
+                                        onGoogleLoginClick = { /* Handle Google Sign In */ },
+                                        onPhoneLoginClick = { /* Handle Phone Sign In */ },
+                                        isLoading = authState is com.example.ai_music_pro.ui.auth.AuthState.Loading,
+                                        errorMessage = (authState as? com.example.ai_music_pro.ui.auth.AuthState.Error)?.message
+                                    )
+                                    // Effect to navigate home on success
+                                    LaunchedEffect(authState) {
+                                        if (authState is com.example.ai_music_pro.ui.auth.AuthState.Success) {
+                                            navController.navigate(Screen.Home.route) {
+                                                popUpTo(Screen.Login.route) { inclusive = true }
+                                            }
+                                        }
+                                    }
+                                }
+                                composable(Screen.Signup.route) {
+                                    SignupScreen(
+                                        onSignupClick = { name, email, pass -> authViewModel.register(name, email, pass) },
+                                        onBackToLogin = { navController.popBackStack() },
+                                        isLoading = authState is com.example.ai_music_pro.ui.auth.AuthState.Loading,
+                                        errorMessage = (authState as? com.example.ai_music_pro.ui.auth.AuthState.Error)?.message
+                                    )
+                                }
                                 composable(Screen.Home.route) {
+                                    // Auto-navigate to Room when a room is joined
+                                    LaunchedEffect(currentRoomId) {
+                                        if (currentRoomId != null) {
+                                            navController.navigate(Screen.Room.route) {
+                                                launchSingleTop = true
+                                            }
+                                        }
+                                    }
+
                                     HomeScreen(
                                         allSongs = songs,
                                         filteredSongs = filteredSongs,
+                                        carousels = carousels,
                                         searchQuery = searchQuery,
                                         onSearchQueryChange = { songViewModel.setSearchQuery(it) },
                                         onSettingsClick = { navController.navigate(Screen.Settings.route) },
                                         currentRoomId = currentRoomId,
                                         isLoading = songViewModel.isLoading.collectAsState().value,
                                         onSongClick = { song ->
-                                            val currentIndex = filteredSongs.indexOf(song)
-                                            controller?.clearMediaItems()
-                                            val mediaItems = filteredSongs.map { s ->
-                                                MediaItem.Builder()
-                                                    .setUri(s.songUrl)
-                                                    .setMediaId(s._id)
-                                                    .setMediaMetadata(
-                                                        MediaMetadata.Builder()
-                                                            .setTitle(s.title)
-                                                            .setArtist(s.artist)
-                                                            .setArtworkUri(android.net.Uri.parse(s.coverUrl))
-                                                            .build()
-                                                    )
-                                                    .build()
-                                            }
-                                            controller?.addMediaItems(mediaItems)
-                                            controller?.seekTo(currentIndex, 0)
-                                            controller?.prepare()
-                                            controller?.play()
-                                            playbackState = playbackState.copy(currentSong = song)
+// ... keep song click logic
                                         },
                                         onJoinRoom = { roomId -> songViewModel.joinRoom(roomId) },
-                                        onCreateRoom = { songViewModel.createRoom() }
+                                        onCreateRoom = { songViewModel.createRoom() },
+                                        onAddToQueue = { songId -> songViewModel.requestSong(songId) }
                                     )
                                 }
                                 composable(Screen.Search.route) {
@@ -273,9 +291,79 @@ class MainActivity : ComponentActivity() {
                                         }
                                     )
                                 }
-                                composable(Screen.Settings.route) {
-                                    SettingsScreen(onBackClick = { navController.popBackStack() })
+                                composable(Screen.Profile.route) {
+                                    ProfileScreen(
+                                        onSettingsClick = { navController.navigate(Screen.Settings.route) },
+                                        onLogoutClick = {
+                                            navController.navigate(Screen.Login.route) {
+                                                popUpTo(0) { inclusive = true }
+                                            }
+                                        }
+                                    )
                                 }
+
+                                composable(Screen.Settings.route) {
+
+                                    SettingsScreen(
+                                        onBackClick = { navController.popBackStack() },
+                                        onLogout = {
+                                            android.widget.Toast.makeText(this@MainActivity, "Logged out successfully", android.widget.Toast.LENGTH_SHORT).show()
+                                            navController.navigate(Screen.Login.route) {
+                                                popUpTo(0) { inclusive = true }
+                                            }
+                                        }
+                                    )
+                                }
+
+                                composable(Screen.Room.route) {
+                                    RoomScreen(
+                                        roomId = currentRoomId ?: "",
+                                        hostId = songViewModel.hostId.collectAsState().value,
+                                        isHost = songViewModel.hostId.collectAsState().value != null,
+                                        participants = participants,
+                                        queue = queue,
+                                        allSongs = songs,
+                                        currentSongId = songViewModel.currentSongId.collectAsState().value,
+                                        isPlaying = playbackState.isPlaying,
+                                        onPlayPause = {
+                                            if (playbackState.isPlaying) {
+                                                controller?.pause()
+                                                songViewModel.syncPause(playbackState.currentPosition)
+                                            } else {
+                                                controller?.play()
+                                                playbackState.currentSong?.let { songViewModel.syncPlay(playbackState.currentPosition, it._id) }
+                                            }
+                                        },
+                                        onChangeSong = { songId ->
+                                            val song = songs.find { it._id == songId }
+                                            if (song != null) {
+                                                controller?.setMediaItems(listOf(
+                                                    MediaItem.Builder()
+                                                        .setUri(song.songUrl)
+                                                        .setMediaId(song._id)
+                                                        .setMediaMetadata(
+                                                            MediaMetadata.Builder()
+                                                                .setTitle(song.title)
+                                                                .setArtist(song.artist)
+                                                                .setArtworkUri(android.net.Uri.parse(song.coverUrl))
+                                                                .build()
+                                                        )
+                                                        .build()
+                                                ))
+                                                controller?.prepare()
+                                                controller?.play()
+                                                playbackState = playbackState.copy(currentSong = song)
+                                                songViewModel.changeSong(song._id)
+                                            }
+                                        },
+                                        onAddToQueue = { songId -> songViewModel.requestSong(songId) },
+                                        onRemoveFromQueue = { songId -> songViewModel.removeQueueItem(songId) },
+                                        onKickUser = { userId -> songViewModel.kickUser(userId) },
+                                        onLeaveRoom = { songViewModel.leaveRoom() },
+                                        onBackClick = { navController.popBackStack() }
+                                    )
+                                }
+
                             }
 
                             // Fixed Mini Player
@@ -324,7 +412,11 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onCloseClick = { showPlayer = false },
                                     onPreviousClick = { controller?.seekToPrevious() },
-                                    onNextClick = { controller?.seekToNext() }
+                                    onNextClick = { controller?.seekToNext() },
+                                    participants = participants,
+                                    queue = queue,
+                                    allSongs = songs,
+                                    onRemoveQueueItem = { songId -> songViewModel.removeQueueItem(songId) }
                                 )
                             }
                         }

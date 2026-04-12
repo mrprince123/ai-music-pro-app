@@ -1,7 +1,9 @@
 package com.example.ai_music_pro.socket
 
+import com.example.ai_music_pro.util.Constants
 import io.socket.client.IO
 import io.socket.client.Socket
+
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import org.json.JSONObject
@@ -39,8 +41,9 @@ class SocketManager @Inject constructor() {
                 forceNew = true
                 reconnection = true
             }
-            val uri = URI.create("http://192.168.1.7:5002")
+            val uri = URI.create(Constants.BASE_URL.removeSuffix("/"))
             socket = IO.socket(uri, options)
+
             setupListeners()
         } catch (e: URISyntaxException) {
             e.printStackTrace()
@@ -67,26 +70,50 @@ class SocketManager @Inject constructor() {
                 android.util.Log.d("SocketManager", "Disconnected from server")
             }
             on("server_time") { args ->
-                val data = args[0] as JSONObject
-                val serverTime = data.getLong("serverTime")
-                val localTime = System.currentTimeMillis()
-                serverNetworkOffsetMs = localTime - serverTime
+                (args.getOrNull(0) as? JSONObject)?.let { data ->
+                    val serverTime = data.optLong("serverTime", System.currentTimeMillis())
+                    val localTime = System.currentTimeMillis()
+                    serverNetworkOffsetMs = localTime - serverTime
+                }
             }
             on("room_joined") { args ->
-                val data = args[0] as JSONObject
-                val roomId = data.getString("roomId")
-                _roomEvents.tryEmit(RoomEvent.RoomJoined(roomId))
+                (args.getOrNull(0) as? JSONObject)?.let { data ->
+                    val roomId = data.optString("roomId", "")
+                    if (roomId.isNotEmpty()) {
+                        _roomEvents.tryEmit(RoomEvent.RoomJoined(roomId))
+                    }
+                }
             }
             on("room_full") {
                 _roomEvents.tryEmit(RoomEvent.RoomFull)
             }
             on("user_joined") { args ->
-                val data = args[0] as JSONObject
-                _roomEvents.tryEmit(RoomEvent.UserJoined(data.getString("userId")))
+                (args.getOrNull(0) as? JSONObject)?.let { data ->
+                    val userId = data.optString("userId", "")
+                    if (userId.isNotEmpty()) {
+                        _roomEvents.tryEmit(RoomEvent.UserJoined(userId))
+                    }
+                }
             }
             on("user_left") { args ->
-                val data = args[0] as JSONObject
-                _roomEvents.tryEmit(RoomEvent.UserLeft(data.getString("userId")))
+                (args.getOrNull(0) as? JSONObject)?.let { data ->
+                    val userId = data.optString("userId", "")
+                    if (userId.isNotEmpty()) {
+                        _roomEvents.tryEmit(RoomEvent.UserLeft(userId))
+                    }
+                }
+            }
+            on("queue_updated") { args ->
+                (args.getOrNull(0) as? JSONObject)?.let { data ->
+                    val queueArray = data.optJSONArray("queue")
+                    val queue = mutableListOf<String>()
+                    if (queueArray != null) {
+                        for (i in 0 until queueArray.length()) {
+                            queue.add(queueArray.getString(i))
+                        }
+                    }
+                    _roomEvents.tryEmit(RoomEvent.QueueUpdated(queue))
+                }
             }
             on("sync_play") { args ->
                 (args.getOrNull(0) as? JSONObject)?.let { data ->
@@ -110,6 +137,20 @@ class SocketManager @Inject constructor() {
                     _roomEvents.tryEmit(RoomEvent.Error(data.optString("message", "Unknown Error")))
                 }
             }
+            on("user_kicked") { args ->
+                (args.getOrNull(0) as? JSONObject)?.let { data ->
+                    val kickedUserId = data.optString("userId", "")
+                    if (kickedUserId.isNotEmpty()) {
+                        _roomEvents.tryEmit(RoomEvent.UserKicked(kickedUserId))
+                    }
+                }
+            }
+            on("room_state") { args ->
+                (args.getOrNull(0) as? JSONObject)?.let { data ->
+                    _roomEvents.tryEmit(RoomEvent.RoomStateReceived(data))
+                }
+            }
+
         }
     }
 
@@ -146,6 +187,44 @@ class SocketManager @Inject constructor() {
         }
         socket?.emit("seek", payload)
     }
+    fun requestSong(roomId: String, songId: String) {
+        val payload = JSONObject().apply {
+            put("roomId", roomId)
+            put("songId", songId)
+        }
+        socket?.emit("request_song", payload)
+    }
+
+    fun removeQueueItem(roomId: String, songId: String) {
+        val payload = JSONObject().apply {
+            put("roomId", roomId)
+            put("songId", songId)
+        }
+        socket?.emit("remove_queue_item", payload)
+    }
+
+    fun changeSong(roomId: String, songId: String) {
+        val payload = JSONObject().apply {
+            put("roomId", roomId)
+            put("songId", songId)
+        }
+        socket?.emit("change_song", payload)
+    }
+
+    fun kickUser(roomId: String, targetUserId: String) {
+        val payload = JSONObject().apply {
+            put("roomId", roomId)
+            put("targetUserId", targetUserId)
+        }
+        socket?.emit("kick_user", payload)
+    }
+
+    fun getRoomState(roomId: String) {
+        val payload = JSONObject().apply {
+            put("roomId", roomId)
+        }
+        socket?.emit("get_room_state", payload)
+    }
 }
 
 sealed class RoomEvent {
@@ -153,6 +232,9 @@ sealed class RoomEvent {
     object RoomFull : RoomEvent()
     data class UserJoined(val userId: String) : RoomEvent()
     data class UserLeft(val userId: String) : RoomEvent()
+    data class UserKicked(val userId: String) : RoomEvent()
+    data class QueueUpdated(val queue: List<String>) : RoomEvent()
+    data class RoomStateReceived(val data: JSONObject) : RoomEvent()
     data class Error(val message: String) : RoomEvent()
 }
 
