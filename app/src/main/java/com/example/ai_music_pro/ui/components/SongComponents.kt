@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -24,7 +26,7 @@ import com.example.ai_music_pro.ui.theme.Dimens
 import com.example.ai_music_pro.ui.theme.LunkgemBlue
 
 @Composable
-fun TrendingSongCard(song: Song, onClick: () -> Unit) {
+fun TrendingSongCard(song: Song, onClick: () -> Unit, onLikeClick: (String) -> Unit = {}) {
     Column(
         modifier = Modifier
             .width(160.dp)
@@ -67,6 +69,17 @@ fun TrendingSongCard(song: Song, onClick: () -> Unit) {
                     modifier = Modifier.size(Dimens.IconSizeSmall)
                 )
             }
+            IconButton(
+                onClick = { onLikeClick(song._id) },
+                modifier = Modifier.align(Alignment.TopEnd)
+            ) {
+                Icon(
+                    imageVector = if (song.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = null,
+                    tint = if (song.isLiked) Color.Red else Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
         Spacer(modifier = Modifier.height(Dimens.PaddingSmall))
         Text(
@@ -86,20 +99,37 @@ fun TrendingSongCard(song: Song, onClick: () -> Unit) {
 }
 
 @Composable
-fun PlaylistCard(song: Song, onClick: () -> Unit) {
+fun PlaylistCard(song: Song, onClick: () -> Unit, onLikeClick: (String) -> Unit = {}) {
     Column(
         modifier = Modifier
-            .width(120.dp)
+            .width(140.dp)
             .clickable(onClick = onClick)
     ) {
-        AsyncImage(
-            model = song.coverUrl,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(120.dp)
-                .clip(RoundedCornerShape(Dimens.RadiusMedium))
-        )
+        Box {
+            AsyncImage(
+                model = song.coverUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(140.dp)
+                    .clip(RoundedCornerShape(Dimens.RadiusMedium))
+            )
+            IconButton(
+                onClick = { onLikeClick(song._id) },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp)
+                    .size(32.dp)
+                    .background(Color.Black.copy(alpha = 0.3f), CircleShape)
+            ) {
+                Icon(
+                    imageVector = if (song.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = null,
+                    tint = if (song.isLiked) Color.Red else Color.White,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
         Spacer(modifier = Modifier.height(Dimens.PaddingSmall))
         Text(
             text = song.title,
@@ -112,7 +142,7 @@ fun PlaylistCard(song: Song, onClick: () -> Unit) {
 }
 
 @Composable
-fun SongListItem(song: Song, onClick: () -> Unit) {
+fun SongListItem(song: Song, onClick: () -> Unit, onLikeClick: (String) -> Unit = {}) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -154,7 +184,13 @@ fun SongListItem(song: Song, onClick: () -> Unit) {
                     text = song.artist,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     fontSize = 14.sp,
-                    maxLines = 1
+                )
+            }
+            IconButton(onClick = { onLikeClick(song._id) }) {
+                Icon(
+                    imageVector = if (song.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = null,
+                    tint = if (song.isLiked) Color.Red else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
             }
             IconButton(onClick = onClick) {

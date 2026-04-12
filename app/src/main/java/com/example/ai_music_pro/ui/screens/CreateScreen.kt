@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.ai_music_pro.ui.components.AppInputField
 import com.example.ai_music_pro.ui.theme.LunkgemBlue
 import com.example.ai_music_pro.ui.theme.SurfaceGray
 import com.example.ai_music_pro.ui.viewmodel.CreateAlbumViewModel
@@ -52,19 +53,11 @@ fun CreateScreen(
             modifier = Modifier.padding(vertical = 16.dp)
         )
 
-        TextField(
+        AppInputField(
             value = albumName,
             onValueChange = { albumName = it },
-            placeholder = { Text("Album Name", color = Color.Gray) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp)),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = SurfaceGray,
-                unfocusedContainerColor = SurfaceGray,
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White
-            )
+            placeholder = "Album Name",
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(24.dp))

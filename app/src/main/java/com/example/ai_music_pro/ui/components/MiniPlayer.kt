@@ -34,7 +34,7 @@ fun MiniPlayer(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp),
-        color = Color.White.copy(alpha = 0.08f),
+        color = Color(0xFF1C1C1E), // Solid dark color
         shape = RoundedCornerShape(12.dp),
         border = androidx.compose.foundation.BorderStroke(
             0.5.dp,

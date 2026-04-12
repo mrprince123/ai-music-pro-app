@@ -215,6 +215,14 @@ class SongViewModel @Inject constructor(
         _currentRoomId.value?.let { socketManager.seek(it, currentTimeMs) }
     }
 
+    fun toggleLike(songId: String) {
+        _songs.value = _songs.value.map {
+            if (it._id == songId) it.copy(isLiked = !it.isLiked) else it
+        }
+        // Update filtered songs as well
+        updateFilteredSongs(_songs.value, _searchQuery.value)
+    }
+
     override fun onCleared() {
         super.onCleared()
         socketManager.disconnect()

@@ -50,7 +50,8 @@ fun PlayerScreen(
     participants: List<com.example.ai_music_pro.domain.model.UserProfile> = emptyList(),
     queue: List<String> = emptyList(),
     allSongs: List<com.example.ai_music_pro.domain.model.Song> = emptyList(),
-    onRemoveQueueItem: (String) -> Unit = {}
+    onRemoveQueueItem: (String) -> Unit = {},
+    onLikeClick: (String) -> Unit = {}
 ) {
     if (song == null) return
 
@@ -130,14 +131,16 @@ fun PlayerScreen(
                 onSeek = onSeek,
                 onPreviousClick = onPreviousClick,
                 onNextClick = onNextClick,
-                onQueueClick = { showQueueSheet = true }
+                onQueueClick = { showQueueSheet = true },
+                isLiked = song.isLiked,
+                onLikeClick = { onLikeClick(song._id) }
             )
         }
 
         if (showQueueSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showQueueSheet = false },
-                dragHandle = { BottomSheetDefaults.DragHandle(color = Color.White.copy(alpha = 0.2f)) }
+                dragHandle = { BottomSheetDefaults.DragHandle(color = Color.White) }
             ) {
                 RoomQueueContent(
                     participants = participants,
@@ -190,7 +193,9 @@ fun PlayerControls(
     onSeek: (Float) -> Unit,
     onPreviousClick: () -> Unit,
     onNextClick: () -> Unit,
-    onQueueClick: () -> Unit
+    onQueueClick: () -> Unit,
+    isLiked: Boolean = false,
+    onLikeClick: () -> Unit = {}
 ) {
     Column {
         Slider(
@@ -215,7 +220,13 @@ fun PlayerControls(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onQueueClick) { Icon(Icons.Default.QueueMusic, null, tint = MaterialTheme.colorScheme.onSurface) }
+            IconButton(onClick = onLikeClick) { 
+                Icon(
+                    imageVector = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder, 
+                    null, 
+                    tint = if (isLiked) Color.Red else MaterialTheme.colorScheme.onSurface 
+                ) 
+            }
             IconButton(onClick = onPreviousClick) { Icon(Icons.Default.SkipPrevious, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(Dimens.IconSizeLarge)) }
             
             Surface(
@@ -234,7 +245,7 @@ fun PlayerControls(
             }
 
             IconButton(onClick = onNextClick) { Icon(Icons.Default.SkipNext, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(Dimens.IconSizeLarge)) }
-            IconButton(onClick = { }) { Icon(Icons.Default.Refresh, null, tint = MaterialTheme.colorScheme.onSurface) }
+            IconButton(onClick = onQueueClick) { Icon(Icons.Default.QueueMusic, null, tint = MaterialTheme.colorScheme.onSurface) }
         }
     }
 }

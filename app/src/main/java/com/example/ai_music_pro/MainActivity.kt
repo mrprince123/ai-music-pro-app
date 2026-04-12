@@ -193,11 +193,29 @@ class MainActivity : ComponentActivity() {
                                         currentRoomId = currentRoomId,
                                         isLoading = songViewModel.isLoading.collectAsState().value,
                                         onSongClick = { song ->
-// ... keep song click logic
+                                            controller?.setMediaItems(listOf(
+                                                MediaItem.Builder()
+                                                    .setUri(song.songUrl)
+                                                    .setMediaId(song._id)
+                                                    .setMediaMetadata(
+                                                        MediaMetadata.Builder()
+                                                            .setTitle(song.title)
+                                                            .setArtist(song.artist)
+                                                            .setArtworkUri(android.net.Uri.parse(song.coverUrl))
+                                                            .build()
+                                                    )
+                                                    .build()
+                                            ))
+                                            controller?.prepare()
+                                            controller?.play()
+                                            playbackState = playbackState.copy(currentSong = song)
+                                            songViewModel.syncPlay(0L, song._id)
                                         },
                                         onJoinRoom = { roomId -> songViewModel.joinRoom(roomId) },
                                         onCreateRoom = { songViewModel.createRoom() },
-                                        onAddToQueue = { songId -> songViewModel.requestSong(songId) }
+                                        onAddToQueue = { songId -> songViewModel.requestSong(songId) },
+                                        onRefresh = { songViewModel.fetchSongs() },
+                                        onLikeClick = { songId -> songViewModel.toggleLike(songId) }
                                     )
                                 }
                                 composable(Screen.Search.route) {
@@ -416,7 +434,8 @@ class MainActivity : ComponentActivity() {
                                     participants = participants,
                                     queue = queue,
                                     allSongs = songs,
-                                    onRemoveQueueItem = { songId -> songViewModel.removeQueueItem(songId) }
+                                    onRemoveQueueItem = { songId -> songViewModel.removeQueueItem(songId) },
+                                    onLikeClick = { songId -> songViewModel.toggleLike(songId) }
                                 )
                             }
                         }

@@ -50,7 +50,8 @@ data class Song(
     val coverUrl: String,
     val category: String,
     val description: String? = null,
-    val playCount: Int = 0
+    val playCount: Int = 0,
+    val isLiked: Boolean = false
 )
 
 data class PaginatedResponse<T>(
@@ -84,4 +85,10 @@ data class CarouselItem(
     val image: String,
     val title: String? = null,
     val link: String? = null
+)
+
+data class QuickAccessItem(
+    val title: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val color: androidx.compose.ui.graphics.Color
 )
