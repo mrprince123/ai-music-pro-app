@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
@@ -14,6 +15,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -22,6 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.ai_music_pro.ui.components.SongListItem
 import com.example.ai_music_pro.ui.components.SongListShimmer
 import com.example.ai_music_pro.ui.theme.LunkgemBlue
+import com.example.ai_music_pro.ui.theme.SpotifyGreen
 import com.example.ai_music_pro.ui.theme.SurfaceGray
 import com.example.ai_music_pro.ui.viewmodel.AlbumDetailViewModel
 
@@ -77,13 +81,47 @@ fun AlbumDetailScreen(
                 return@Box
             }
 
-            Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-                Text(text = currentAlbum.name, color = MaterialTheme.colorScheme.onSurface, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "${songs.size} songs", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 14.sp)
-                Spacer(modifier = Modifier.height(24.dp))
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Premium Banner
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(260.dp)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    SpotifyGreen.copy(alpha = 0.4f),
+                                    MaterialTheme.colorScheme.background
+                                )
+                            )
+                        ),
+                    contentAlignment = Alignment.BottomStart
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 24.dp),
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Album, contentDescription = null, tint = SpotifyGreen, modifier = Modifier.size(64.dp))
+                        }
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Column {
+                            Text(text = "ALBUM", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(text = currentAlbum.name, color = MaterialTheme.colorScheme.onSurface, fontSize = 28.sp, fontWeight = FontWeight.Black, lineHeight = 32.sp)
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(text = "${songs.size} songs", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                        }
+                    }
+                }
 
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
                     items(songs) { song ->
                         SongListItem(song = song, onClick = { onSongClick(song) })
                     }

@@ -6,20 +6,24 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.ai_music_pro.ui.components.SongListItem
 import com.example.ai_music_pro.ui.viewmodel.LibraryViewModel
+import com.example.ai_music_pro.ui.theme.SpotifyGreen
 
 @Composable
 fun LibraryScreen(
@@ -110,8 +114,19 @@ fun LibraryScreen(
                 } else {
                     items(localAlbums) { album ->
                         ListItem(
-                            headlineContent = { Text(album.name, color = MaterialTheme.colorScheme.onSurface) },
+                            headlineContent = { Text(album.name, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp) },
                             supportingContent = { Text("${album.songIds.split(",").size} songs", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) },
+                            leadingContent = {
+                                Box(
+                                    modifier = Modifier
+                                        .size(56.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.Album, contentDescription = null, tint = SpotifyGreen)
+                                }
+                            },
                             modifier = Modifier
                                 .background(Color.Transparent)
                                 .clickable { onAlbumClick(album.id) },

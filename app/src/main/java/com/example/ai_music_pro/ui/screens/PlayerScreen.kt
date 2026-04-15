@@ -34,6 +34,7 @@ import com.example.ai_music_pro.R
 import com.example.ai_music_pro.domain.model.Song
 import com.example.ai_music_pro.ui.theme.Dimens
 import com.example.ai_music_pro.ui.theme.LunkgemBlue
+import com.example.ai_music_pro.ui.theme.SpotifyGreen
 import androidx.compose.material.icons.automirrored.filled.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,7 +64,14 @@ fun PlayerScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        SpotifyGreen,
+                        MaterialTheme.colorScheme.background
+                    )
+                )
+            )
     ) {
         // Main Content (Artwork or Lyrics)
         Column(
@@ -113,6 +121,16 @@ fun PlayerScreen(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
+                if (!song.description.isNullOrEmpty()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = song.description,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                    )
+                }
             }
             
             // Padding for the fixed controls

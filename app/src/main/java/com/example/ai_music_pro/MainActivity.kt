@@ -101,19 +101,24 @@ class MainActivity : ComponentActivity() {
 
                 fun handleSongClick(song: Song) {
                     controller?.let { player ->
-                        val mediaItem = MediaItem.Builder()
-                            .setUri(song.songUrl)
-                            .setMediaId(song._id)
-                            .setMediaMetadata(
-                                MediaMetadata.Builder()
-                                    .setTitle(song.title)
-                                    .setArtist(song.artist)
-                                    .setArtworkUri(android.net.Uri.parse(song.coverUrl))
-                                    .build()
-                            )
-                            .build()
-                        
-                        player.setMediaItems(listOf(mediaItem))
+                        val allItems = updatedAllSongs.map { s ->
+                            MediaItem.Builder()
+                                .setUri(s.songUrl)
+                                .setMediaId(s._id)
+                                .setMediaMetadata(
+                                    MediaMetadata.Builder()
+                                        .setTitle(s.title)
+                                        .setArtist(s.artist)
+                                        .setArtworkUri(android.net.Uri.parse(s.coverUrl))
+                                        .build()
+                                )
+                                .build()
+                        }
+                        val index = updatedAllSongs.indexOfFirst { it._id == song._id }
+                        player.setMediaItems(allItems)
+                        if (index >= 0) {
+                            player.seekTo(index, 0L)
+                        }
                         player.prepare()
                         player.play()
                         playbackState = playbackState.copy(currentSong = song)
