@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import com.example.ai_music_pro.util.LocalMusicProvider
 import android.content.Context
 import javax.inject.Inject
+import kotlinx.coroutines.flow.first
 
 @HiltViewModel
 class SongViewModel @Inject constructor(
@@ -195,7 +196,8 @@ class SongViewModel @Inject constructor(
             _error.value = null
             repository.getSongs()
                 .onSuccess { response ->
-                    _songs.value = response.songs
+                    val likedIds = repository.getLikedSongs().first().map { it._id }.toSet()
+                    _songs.value = response.songs.map { it.copy(isLiked = likedIds.contains(it._id)) }
                 }
                 .onFailure { exception ->
                     _error.value = exception.message ?: "Unknown error occurred"
@@ -232,11 +234,18 @@ class SongViewModel @Inject constructor(
     }
 
     fun toggleLike(songId: String) {
-        _songs.value = _songs.value.map {
-            if (it._id == songId) it.copy(isLiked = !it.isLiked) else it
+        val song = _songs.value.find { it._id == songId } ?: return
+        val wasLiked = song.isLiked
+        
+        viewModelScope.launch {
+            repository.toggleLikeSong(song, wasLiked)
+            
+            _songs.value = _songs.value.map {
+                if (it._id == songId) it.copy(isLiked = !wasLiked) else it
+            }
+            // Update filtered songs as well
+            updateFilteredSongs(_songs.value, _searchQuery.value)
         }
-        // Update filtered songs as well
-        updateFilteredSongs(_songs.value, _searchQuery.value)
     }
 
     override fun onCleared() {

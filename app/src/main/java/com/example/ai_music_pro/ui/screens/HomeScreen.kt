@@ -270,18 +270,19 @@ fun HeaderSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Left: Back Button or App Logo
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                } else {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable { onSettingsClick() }
-                    ) {
+            if (onBackClick != null) {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { onSettingsClick() }
+                ) {
                         Image(
                             painter = painterResource(id = R.drawable.app_logo),
                             contentDescription = "Settings",
@@ -319,7 +320,7 @@ fun HeaderSection(
                 }
                 IconButton(onClick = onSyncClick) {
                     Icon(
-                        imageVector = Icons.Default.Share,
+                        imageVector = Icons.Default.Group,
                         contentDescription = "Join Room",
                         tint = LunkgemBlue,
                         modifier = Modifier.size(24.dp)
