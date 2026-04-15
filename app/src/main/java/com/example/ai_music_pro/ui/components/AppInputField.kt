@@ -71,9 +71,9 @@ fun AppInputField(
         visualTransformation = if (isPassword && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(keyboardType = if (isPassword) KeyboardType.Password else keyboardType),
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.White.copy(alpha = 0.05f),
-            unfocusedContainerColor = Color.White.copy(alpha = 0.05f),
-            disabledContainerColor = Color.White.copy(alpha = 0.05f),
+            focusedContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+            unfocusedContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+            disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
             cursorColor = MaterialTheme.colorScheme.primary,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,

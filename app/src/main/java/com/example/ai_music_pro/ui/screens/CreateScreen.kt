@@ -41,13 +41,13 @@ fun CreateScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
         SnackbarHost(hostState = snackbarHostState)
         Text(
             text = "Create Album",
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onSurface,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(vertical = 16.dp)
@@ -61,7 +61,7 @@ fun CreateScreen(
         )
 
         Spacer(modifier = Modifier.height(24.dp))
-        Text(text = "Add Songs", color = Color.White, fontWeight = FontWeight.Bold)
+        Text(text = "Add Songs", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
 
         LazyColumn(modifier = Modifier.weight(1f)) {
@@ -77,12 +77,12 @@ fun CreateScreen(
                     Icon(
                         imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
                         contentDescription = null,
-                        tint = if (isSelected) LunkgemBlue else Color.Gray
+                        tint = if (isSelected) LunkgemBlue else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
-                        Text(text = song.title, color = Color.White, fontWeight = FontWeight.Bold)
-                        Text(text = song.artist, color = Color.Gray, fontSize = 12.sp)
+                        Text(text = song.title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                        Text(text = song.artist, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 12.sp)
                     }
                 }
             }
@@ -103,7 +103,7 @@ fun CreateScreen(
             colors = ButtonDefaults.buttonColors(containerColor = LunkgemBlue),
             enabled = albumName.isNotEmpty() && selectedIds.isNotEmpty()
         ) {
-            Text("Create Album", color = Color.Black, fontWeight = FontWeight.Bold)
+            Text("Create Album", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
         }
         
         Spacer(modifier = Modifier.height(100.dp))

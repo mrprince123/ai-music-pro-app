@@ -85,7 +85,10 @@ fun HomeScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFF0F0F0F), Color(0xFF000000))
+                    colors = listOf(
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.surface
+                    )
                 )
             )
     ) {
@@ -154,7 +157,7 @@ fun HomeScreen(
                                 text = "Mood & Genres",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.padding(16.dp)
                             )
                             LazyRow(
@@ -233,7 +236,7 @@ fun CategoryItem(name: String, onClick: () -> Unit) {
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Text(text = name, color = Color.Gray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Text(text = name, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -245,13 +248,18 @@ fun HeaderSection(
     onBackClick: (() -> Unit)? = null
 ) {
     Surface(
-        color = Color.Black.copy(alpha = 0.4f),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)),
         border = androidx.compose.foundation.BorderStroke(
             0.5.dp,
-            Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.1f), Color.Transparent))
+            Brush.verticalGradient(
+                listOf(
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), 
+                    Color.Transparent
+                )
+            )
         )
     ) {
         Row(
@@ -261,26 +269,37 @@ fun HeaderSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (onBackClick != null) {
-                IconButton(onClick = onBackClick) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onSurface)
-                }
-            } else {
-                IconButton(onClick = onSettingsClick) {
-                    Icon(Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(Dimens.IconSizeMedium))
-                }
+            // Left: Back Button or App Logo
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                } else {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { onSettingsClick() }
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.app_logo),
+                            contentDescription = "Settings",
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "AI Music Pro",
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(id = R.drawable.app_logo),
-                    contentDescription = null,
-                    modifier = Modifier.size(48.dp).clip(RoundedCornerShape(Dimens.RadiusSmall))
-                )
-                Spacer(modifier = Modifier.width(Dimens.PaddingSmall))
-                Text(text = "AI Music Pro", color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            }
-
+            // Right: Room & Share Actions
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (currentRoomId != null) {
                     Box(
@@ -290,11 +309,21 @@ fun HeaderSection(
                             .background(LunkgemBlue.copy(alpha = 0.2f))
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
-                        Text(text = "ROOM: $currentRoomId", color = LunkgemBlue, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = "ROOM: $currentRoomId",
+                            color = LunkgemBlue,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
                 IconButton(onClick = onSyncClick) {
-                    Icon(Icons.Default.Share, contentDescription = "Join Room", tint = LunkgemBlue, modifier = Modifier.size(24.dp))
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Join Room",
+                        tint = LunkgemBlue,
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
             }
         }
@@ -314,27 +343,40 @@ fun QuickAccessSection(items: List<QuickAccessItem>, onItemClick: (String) -> Un
                             .padding(Dimens.PaddingSmall / 2)
                             .height(56.dp)
                             .clickable { onItemClick(item.title) },
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                        ),
                         shape = RoundedCornerShape(Dimens.RadiusSmall),
                         border = androidx.compose.foundation.BorderStroke(
                             0.5.dp,
-                            Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.1f), Color.Transparent))
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                         ),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
-                        Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Box(
-                                modifier = Modifier.fillMaxHeight().width(56.dp).background(item.color.copy(alpha = 0.15f)),
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .width(52.dp)
+                                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(item.icon, contentDescription = null, tint = item.color, modifier = Modifier.size(Dimens.IconSizeMedium))
+                                Icon(
+                                    imageVector = item.icon,
+                                    contentDescription = null,
+                                    tint = item.color,
+                                    modifier = Modifier.size(24.dp)
+                                )
                             }
                             Text(
                                 text = item.title,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(start = 12.dp)
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(horizontal = 12.dp)
                             )
                         }
                     }

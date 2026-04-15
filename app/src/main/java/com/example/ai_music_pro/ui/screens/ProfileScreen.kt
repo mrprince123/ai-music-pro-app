@@ -165,7 +165,7 @@ fun ProfileHeader(
                 modifier = Modifier
                     .size(100.dp)
                     .clip(CircleShape)
-                    .background(SurfaceGray),
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentScale = ContentScale.Crop
             )
             IconButton(
@@ -173,10 +173,10 @@ fun ProfileHeader(
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(LunkgemBlue)
+                    .background(MaterialTheme.colorScheme.primary)
                     .padding(4.dp)
             ) {
-                Icon(Icons.Default.Edit, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp))
             }
         }
         
@@ -206,12 +206,12 @@ fun ProfileHeader(
         // Role & Provider Badges
         Row(verticalAlignment = Alignment.CenterVertically) {
             Surface(
-                color = if (role == "admin") LunkgemBlue.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.05f),
+                color = if (role == "admin") MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
                 shape = RoundedCornerShape(16.dp),
             ) {
                 Text(
                     text = if (role == "admin") "Administrator" else "Premium Member",
-                    color = if (role == "admin") LunkgemBlue else Color.White.copy(alpha = 0.7f),
+                    color = if (role == "admin") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
@@ -221,12 +221,12 @@ fun ProfileHeader(
             Spacer(modifier = Modifier.width(8.dp))
             
             Surface(
-                color = Color.White.copy(alpha = 0.05f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
                 shape = RoundedCornerShape(16.dp),
             ) {
                 Text(
                     text = authProvider.uppercase(),
-                    color = Color.White.copy(alpha = 0.5f),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
@@ -271,13 +271,13 @@ fun ProfileMenuItem(
             modifier = Modifier
                 .size(40.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(iconColor.copy(alpha = 0.1f)),
+                .background(iconColor.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(20.dp))
         }
         Spacer(modifier = Modifier.width(16.dp))
         Text(text = title, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
-        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
+        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), modifier = Modifier.size(16.dp))
     }
 }

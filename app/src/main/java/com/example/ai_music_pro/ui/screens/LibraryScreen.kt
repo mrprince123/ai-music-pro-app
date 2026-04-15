@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +24,7 @@ import com.example.ai_music_pro.ui.viewmodel.LibraryViewModel
 @Composable
 fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
+    localSongs: List<com.example.ai_music_pro.domain.model.Song> = emptyList(),
     onSongClick: (com.example.ai_music_pro.domain.model.Song) -> Unit = {},
     onAlbumClick: (String) -> Unit = {}
 ) {
@@ -33,7 +35,7 @@ fun LibraryScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Spacer(modifier = Modifier.height(16.dp))
         Row(
@@ -44,7 +46,7 @@ fun LibraryScreen(
         ) {
             Text(
                 text = "Your Library",
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
@@ -54,11 +56,11 @@ fun LibraryScreen(
         TabRow(
             selectedTabIndex = selectedTab,
             containerColor = Color.Transparent,
-            contentColor = Color.White,
+            contentColor = MaterialTheme.colorScheme.primary,
             indicator = { tabPositions ->
                 TabRowDefaults.SecondaryIndicator(
                     modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.primary
                 )
             },
             divider = {}
@@ -73,6 +75,11 @@ fun LibraryScreen(
                 onClick = { selectedTab = 1 },
                 text = { Text("Albums") }
             )
+            Tab(
+                selected = selectedTab == 2,
+                onClick = { selectedTab = 2 },
+                text = { Text("Local") }
+            )
         }
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -83,9 +90,9 @@ fun LibraryScreen(
                             modifier = Modifier.fillMaxWidth().padding(32.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Icon(Icons.Default.Favorite, contentDescription = null, tint = Color.DarkGray, modifier = Modifier.size(64.dp))
+                            Icon(Icons.Default.Favorite, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), modifier = Modifier.size(64.dp))
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text(text = "Songs you like will appear here", color = Color.Gray)
+                            Text(text = "Songs you like will appear here", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                         }
                     }
                 } else {
@@ -93,7 +100,7 @@ fun LibraryScreen(
                         SongListItem(song = song, onClick = { onSongClick(song) })
                     }
                 }
-            } else {
+            } else if (selectedTab == 1) {
                 if (localAlbums.isEmpty()) {
                     item {
                         Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
@@ -103,13 +110,30 @@ fun LibraryScreen(
                 } else {
                     items(localAlbums) { album ->
                         ListItem(
-                            headlineContent = { Text(album.name, color = Color.White) },
-                            supportingContent = { Text("${album.songIds.split(",").size} songs", color = Color.Gray) },
+                            headlineContent = { Text(album.name, color = MaterialTheme.colorScheme.onSurface) },
+                            supportingContent = { Text("${album.songIds.split(",").size} songs", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) },
                             modifier = Modifier
                                 .background(Color.Transparent)
                                 .clickable { onAlbumClick(album.id) },
                             colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                         )
+                    }
+                }
+            } else if (selectedTab == 2) {
+                if (localSongs.isEmpty()) {
+                    item {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(Icons.Default.MusicNote, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), modifier = Modifier.size(64.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(text = "No local songs found", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                        }
+                    }
+                } else {
+                    items(localSongs) { song ->
+                        SongListItem(song = song, onClick = { onSongClick(song) })
                     }
                 }
             }

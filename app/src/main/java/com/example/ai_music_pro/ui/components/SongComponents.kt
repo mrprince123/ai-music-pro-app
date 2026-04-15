@@ -1,20 +1,26 @@
 package com.example.ai_music_pro.ui.components
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -27,10 +33,19 @@ import com.example.ai_music_pro.ui.theme.LunkgemBlue
 
 @Composable
 fun TrendingSongCard(song: Song, onClick: () -> Unit, onLikeClick: (String) -> Unit = {}) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, label = "scale")
+
     Column(
         modifier = Modifier
             .width(160.dp)
-            .clickable(onClick = onClick)
+            .scale(scale)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
     ) {
         Box(
             modifier = Modifier
@@ -39,10 +54,14 @@ fun TrendingSongCard(song: Song, onClick: () -> Unit, onLikeClick: (String) -> U
                 .border(
                     width = 1.dp,
                     brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                        colors = listOf(Color.White.copy(alpha = 0.2f), Color.Transparent)
+                        colors = listOf(
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+                            Color.Transparent
+                        )
                     ),
                     shape = RoundedCornerShape(Dimens.RadiusMedium)
                 )
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
         ) {
             AsyncImage(
                 model = song.coverUrl,
@@ -55,8 +74,8 @@ fun TrendingSongCard(song: Song, onClick: () -> Unit, onLikeClick: (String) -> U
                     .padding(Dimens.PaddingSmall)
                     .size(Dimens.IconSizeLarge)
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.2f))
-                    .border(0.5.dp, Color.White.copy(alpha = 0.3f), CircleShape)
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+                    .border(0.5.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), CircleShape)
                     .padding(4.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary),
@@ -65,7 +84,7 @@ fun TrendingSongCard(song: Song, onClick: () -> Unit, onLikeClick: (String) -> U
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = null,
-                    tint = Color.Black,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(Dimens.IconSizeSmall)
                 )
             }
@@ -76,7 +95,7 @@ fun TrendingSongCard(song: Song, onClick: () -> Unit, onLikeClick: (String) -> U
                 Icon(
                     imageVector = if (song.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = null,
-                    tint = if (song.isLiked) Color.Red else Color.White,
+                    tint = if (song.isLiked) Color.Red else Color.White, // Heart usually white/red
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -100,10 +119,19 @@ fun TrendingSongCard(song: Song, onClick: () -> Unit, onLikeClick: (String) -> U
 
 @Composable
 fun PlaylistCard(song: Song, onClick: () -> Unit, onLikeClick: (String) -> Unit = {}) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, label = "scale")
+
     Column(
         modifier = Modifier
             .width(140.dp)
-            .clickable(onClick = onClick)
+            .scale(scale)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
     ) {
         Box {
             AsyncImage(
@@ -143,23 +171,35 @@ fun PlaylistCard(song: Song, onClick: () -> Unit, onLikeClick: (String) -> Unit 
 
 @Composable
 fun SongListItem(song: Song, onClick: () -> Unit, onLikeClick: (String) -> Unit = {}) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.98f else 1f, label = "scale")
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
+            .scale(scale)
             .padding(horizontal = Dimens.PaddingDefault, vertical = Dimens.PaddingSmall / 2),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.05f),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         shape = RoundedCornerShape(Dimens.RadiusSmall),
         border = androidx.compose.foundation.BorderStroke(
             0.5.dp, 
             androidx.compose.ui.graphics.Brush.verticalGradient(
-                colors = listOf(Color.White.copy(alpha = 0.1f), Color.Transparent)
+                colors = listOf(
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), 
+                    Color.Transparent
+                )
             )
         )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onClick)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onClick
+                )
                 .padding(Dimens.PaddingSmall),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -190,7 +230,7 @@ fun SongListItem(song: Song, onClick: () -> Unit, onLikeClick: (String) -> Unit 
                 Icon(
                     imageVector = if (song.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = null,
-                    tint = if (song.isLiked) Color.Red else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    tint = if (song.isLiked) Color.Red else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                 )
             }
             IconButton(onClick = onClick) {

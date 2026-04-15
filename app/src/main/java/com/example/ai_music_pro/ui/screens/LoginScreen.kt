@@ -43,12 +43,12 @@ fun LoginScreen(
             text = "Welcome Back",
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = MaterialTheme.colorScheme.onSurface
         )
         Text(
             text = "Sign in to continue your music journey",
             fontSize = 14.sp,
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             modifier = Modifier.padding(bottom = 32.dp)
         )
 
@@ -74,7 +74,7 @@ fun LoginScreen(
         if (errorMessage != null) {
             Text(
                 text = errorMessage,
-                color = Color.Red,
+                color = MaterialTheme.colorScheme.error,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
@@ -88,11 +88,14 @@ fun LoginScreen(
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = LunkgemBlue),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ),
             enabled = !isLoading
         ) {
             if (isLoading) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
             } else {
                 Text("Login", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
@@ -100,7 +103,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text(text = "OR", color = Color.Gray, fontSize = 12.sp)
+        Text(text = "OR", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), fontSize = 12.sp)
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -109,7 +112,7 @@ fun LoginScreen(
                 onClick = onGoogleLoginClick,
                 modifier = Modifier.weight(1f).height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
             ) {
                 Text("Google", fontWeight = FontWeight.SemiBold)
             }
@@ -118,7 +121,7 @@ fun LoginScreen(
                 onClick = onPhoneLoginClick,
                 modifier = Modifier.weight(1f).height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
             ) {
                 Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))
@@ -129,7 +132,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Row {
-            Text(text = "Don't have an account? ", color = Color.Gray)
+            Text(text = "Don't have an account? ", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
             Text(
                 text = "Register",
                 color = LunkgemBlue,

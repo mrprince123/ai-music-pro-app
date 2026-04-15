@@ -42,12 +42,12 @@ fun SignupScreen(
             text = "Create Account",
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = MaterialTheme.colorScheme.onSurface
         )
         Text(
             text = "Start your premium streaming experience",
             fontSize = 14.sp,
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             modifier = Modifier.padding(bottom = 32.dp)
         )
 
@@ -83,7 +83,7 @@ fun SignupScreen(
         if (errorMessage != null) {
             Text(
                 text = errorMessage,
-                color = Color.Red,
+                color = MaterialTheme.colorScheme.error,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
@@ -97,11 +97,14 @@ fun SignupScreen(
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = LunkgemBlue),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ),
             enabled = !isLoading
         ) {
             if (isLoading) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
             } else {
                 Text("Register", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
@@ -110,7 +113,7 @@ fun SignupScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Row {
-            Text(text = "Already have an account? ", color = Color.Gray)
+            Text(text = "Already have an account? ", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
             Text(
                 text = "Login",
                 color = LunkgemBlue,

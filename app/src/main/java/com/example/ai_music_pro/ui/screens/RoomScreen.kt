@@ -90,7 +90,7 @@ fun RoomScreen(
                 )
             )
         },
-        containerColor = Color(0xFF121212)
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -144,7 +144,7 @@ fun RoomScreen(
                             .padding(32.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("No songs in the queue", color = Color.Gray, fontSize = 14.sp)
+                        Text("No songs in the queue", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), fontSize = 14.sp)
                     }
                 }
             }
@@ -190,11 +190,11 @@ fun RoomScreen(
         if (showSongPicker) {
             ModalBottomSheet(
                 onDismissRequest = { showSongPicker = false },
-                containerColor = Color(0xFF1E1E1E)
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
             ) {
                 Text(
                     "Pick a Song",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     modifier = Modifier.padding(16.dp)
@@ -218,8 +218,8 @@ fun RoomScreen(
                                 contentScale = ContentScale.Crop
                             )
                             Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
-                                Text(song.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text(song.artist, color = Color.Gray, fontSize = 12.sp, maxLines = 1)
+                                Text(song.title, color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(song.artist, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 12.sp, maxLines = 1)
                             }
                             Icon(Icons.Default.PlayArrow, contentDescription = null, tint = SpotifyGreen, modifier = Modifier.size(20.dp))
                         }
@@ -240,7 +240,10 @@ private fun NowPlayingCard(song: Song?, isPlaying: Boolean, isHost: Boolean, onP
             .clip(RoundedCornerShape(20.dp))
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(SpotifyGreen.copy(alpha = 0.3f), Color(0xFF1A1A2E))
+                    colors = listOf(
+                        SpotifyGreen.copy(alpha = 0.3f), 
+                        MaterialTheme.colorScheme.surfaceVariant
+                    )
                 )
             )
             .padding(20.dp)
@@ -256,8 +259,8 @@ private fun NowPlayingCard(song: Song?, isPlaying: Boolean, isHost: Boolean, onP
                 Column(modifier = Modifier.padding(start = 16.dp).weight(1f)) {
                     Text("NOW PLAYING", color = SpotifyGreen, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(song.title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(song.artist, color = Color.White.copy(alpha = 0.6f), fontSize = 14.sp, maxLines = 1)
+                    Text(song.title, color = MaterialTheme.colorScheme.onSurface, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(song.artist, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 14.sp, maxLines = 1)
                 }
                 if (isHost) {
                     IconButton(
@@ -270,7 +273,7 @@ private fun NowPlayingCard(song: Song?, isPlaying: Boolean, isHost: Boolean, onP
                         Icon(
                             imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                             contentDescription = null,
-                            tint = Color.Black,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(28.dp)
                         )
                     }
@@ -288,9 +291,9 @@ private fun NowPlayingCard(song: Song?, isPlaying: Boolean, isHost: Boolean, onP
                     Icon(Icons.Default.MusicNote, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(32.dp))
                 }
                 Column(modifier = Modifier.padding(start = 16.dp)) {
-                    Text("NO SONG PLAYING", color = Color.Gray, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                    Text("NO SONG PLAYING", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("Pick a song to start", color = Color.White.copy(alpha = 0.5f), fontSize = 16.sp)
+                    Text("Pick a song to start", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), fontSize = 16.sp)
                 }
             }
         }
@@ -306,8 +309,8 @@ private fun SectionTitle(title: String, subtitle: String) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        Text(subtitle, color = Color.Gray, fontSize = 12.sp)
+        Text(title, color = MaterialTheme.colorScheme.onSurface, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text(subtitle, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), fontSize = 12.sp)
     }
 }
 
@@ -327,8 +330,8 @@ private fun QueueSongItem(song: Song, isHost: Boolean, onPlay: () -> Unit, onRem
             contentScale = ContentScale.Crop
         )
         Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
-            Text(song.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(song.artist, color = Color.Gray, fontSize = 12.sp, maxLines = 1)
+            Text(song.title, color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(song.artist, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 12.sp, maxLines = 1)
         }
         if (isHost) {
             IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
@@ -354,7 +357,7 @@ private fun ParticipantItem(user: UserProfile, isHost: Boolean, isRoomHost: Bool
         )
         Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(user.name, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                Text(user.name, color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 if (isRoomHost) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Surface(
@@ -371,7 +374,7 @@ private fun ParticipantItem(user: UserProfile, isHost: Boolean, isRoomHost: Bool
                     }
                 }
             }
-            Text(user.email.ifEmpty { "Listening" }, color = Color.Gray, fontSize = 12.sp)
+            Text(user.email.ifEmpty { "Listening" }, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 12.sp)
         }
         if (isHost && !isRoomHost) {
             IconButton(onClick = onKick, modifier = Modifier.size(32.dp)) {
@@ -396,8 +399,8 @@ private fun RequestSongItem(song: Song, onRequest: () -> Unit) {
             contentScale = ContentScale.Crop
         )
         Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
-            Text(song.title, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(song.artist, color = Color.Gray, fontSize = 11.sp, maxLines = 1)
+            Text(song.title, color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(song.artist, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 11.sp, maxLines = 1)
         }
         TextButton(onClick = onRequest) {
             Text("Request", color = LunkgemBlue, fontSize = 12.sp, fontWeight = FontWeight.Bold)

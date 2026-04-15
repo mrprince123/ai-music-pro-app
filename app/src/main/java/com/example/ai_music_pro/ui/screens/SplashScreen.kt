@@ -50,7 +50,7 @@ fun SplashScreen(
     )
 
     Box(
-        modifier = Modifier.fillMaxSize().background(Color.Black),
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -70,7 +70,7 @@ fun SplashScreen(
 
             Text(
                 text = "AI MUSIC PRO",
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Black,
                 textAlign = TextAlign.Center,

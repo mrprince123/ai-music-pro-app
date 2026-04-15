@@ -12,8 +12,12 @@ import java.net.URISyntaxException
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import io.socket.engineio.client.transports.WebSocket
+
 @Singleton
-class SocketManager @Inject constructor() {
+class SocketManager @Inject constructor(
+    private val tokenManager: com.example.ai_music_pro.data.local.TokenManager
+) {
 
     private var socket: Socket? = null
 
@@ -40,6 +44,12 @@ class SocketManager @Inject constructor() {
             val options = IO.Options().apply {
                 forceNew = true
                 reconnection = true
+                transports = arrayOf(WebSocket.NAME)
+                
+                // Add JWT Authentication to handshake
+                tokenManager.getToken()?.let { token ->
+                    auth = mapOf("token" to token)
+                }
             }
             val uri = URI.create(Constants.BASE_URL.removeSuffix("/"))
             socket = IO.socket(uri, options)
@@ -160,7 +170,10 @@ class SocketManager @Inject constructor() {
     }
 
     fun joinRoom(roomId: String) {
-        socket?.emit("join_room", roomId)
+        val payload = JSONObject().apply {
+            put("roomId", roomId)
+        }
+        socket?.emit("join_room", payload)
     }
 
     fun play(roomId: String, currentTimeMs: Long, songId: String) {

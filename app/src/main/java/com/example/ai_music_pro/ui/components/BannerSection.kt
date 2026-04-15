@@ -49,14 +49,17 @@ fun BannerSection(carousels: List<CarouselItem>) {
                     .fillMaxSize()
                     .background(
                         Brush.verticalGradient(
-                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))
+                            listOf(
+                                Color.Transparent, 
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
+                            )
                         )
                     )
             )
             item.title?.let { title ->
                 Text(
                     text = title,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.ExtraBold,
                     modifier = Modifier

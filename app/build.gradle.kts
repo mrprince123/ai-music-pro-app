@@ -72,6 +72,8 @@ dependencies {
     // Hilt DI
     implementation("com.google.dagger:hilt-android:2.51.1")
     ksp("com.google.dagger:hilt-android-compiler:2.51.1")
+    // Navigation
+    implementation("androidx.navigation:navigation-compose:2.8.3")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // Retrofit & OkHttp

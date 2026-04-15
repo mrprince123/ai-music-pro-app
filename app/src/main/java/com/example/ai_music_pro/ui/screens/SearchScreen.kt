@@ -21,6 +21,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.ai_music_pro.ui.components.AppInputField
 import com.example.ai_music_pro.ui.components.SectionHeader
 import com.example.ai_music_pro.ui.components.SongListItem
+import com.example.ai_music_pro.ui.components.SongListShimmer
 import com.example.ai_music_pro.ui.theme.Dimens
 import com.example.ai_music_pro.ui.viewmodel.SearchViewModel
 
@@ -83,9 +84,7 @@ fun SearchScreen(
             } else {
                 if (isSearching) {
                     item {
-                        Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                        }
+                        SongListShimmer()
                     }
                 } else if (searchResults.isEmpty()) {
                     item {

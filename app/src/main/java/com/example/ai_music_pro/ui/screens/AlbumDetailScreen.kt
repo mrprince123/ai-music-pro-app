@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.ai_music_pro.ui.components.SongListItem
+import com.example.ai_music_pro.ui.components.SongListShimmer
 import com.example.ai_music_pro.ui.theme.LunkgemBlue
 import com.example.ai_music_pro.ui.theme.SurfaceGray
 import com.example.ai_music_pro.ui.viewmodel.AlbumDetailViewModel
@@ -41,10 +42,10 @@ fun AlbumDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(album?.name ?: "Album", color = Color.White) },
+                title = { Text(album?.name ?: "Album", color = MaterialTheme.colorScheme.onSurface) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onSurface)
                     }
                 },
                 actions = {
@@ -53,19 +54,17 @@ fun AlbumDetailScreen(
                             onDeleteAlbum()
                         }
                     }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete Album", tint = Color.White)
+                        Icon(Icons.Default.Delete, contentDescription = "Delete Album", tint = MaterialTheme.colorScheme.onSurface)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
-        containerColor = Color.Black
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
             if (isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = LunkgemBlue)
-                }
+                SongListShimmer()
                 return@Box
             }
 
@@ -79,9 +78,9 @@ fun AlbumDetailScreen(
             }
 
             Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-                Text(text = currentAlbum.name, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                Text(text = currentAlbum.name, color = MaterialTheme.colorScheme.onSurface, fontSize = 28.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "${songs.size} songs", color = Color.Gray, fontSize = 14.sp)
+                Text(text = "${songs.size} songs", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 14.sp)
                 Spacer(modifier = Modifier.height(24.dp))
 
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -97,11 +96,11 @@ fun AlbumDetailScreen(
                     modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
                     action = {
                         TextButton(onClick = { }) {
-                            Text(text = "OK", color = Color.White)
+                        Text(text = "OK", color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 ) {
-                    Text(text = error ?: "Unknown error", color = Color.White)
+                    Text(text = error ?: "Unknown error", color = MaterialTheme.colorScheme.onSurface)
                 }
             }
         }

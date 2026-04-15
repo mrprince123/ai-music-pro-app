@@ -29,11 +29,14 @@ fun RoomJoinDialog(
                 .fillMaxWidth()
                 .padding(Dimens.PaddingDefault),
             shape = RoundedCornerShape(Dimens.RadiusExtraLarge),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1E)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             border = androidx.compose.foundation.BorderStroke(
                 0.5.dp, 
                 androidx.compose.ui.graphics.Brush.verticalGradient(
-                    colors = listOf(Color.White.copy(alpha = 0.2f), Color.Transparent)
+                    colors = listOf(
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f), 
+                        Color.Transparent
+                    )
                 )
             )
         ) {

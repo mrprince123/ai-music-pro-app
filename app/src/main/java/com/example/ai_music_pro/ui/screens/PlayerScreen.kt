@@ -1,6 +1,7 @@
 package com.example.ai_music_pro.ui.screens
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
@@ -18,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -77,7 +79,13 @@ fun PlayerScreen(
                 LyricsSection(song = song)
             } else {
                 Spacer(modifier = Modifier.height(Dimens.PaddingLarge))
-                // Artwork
+                // Artwork with scale animation
+                val artworkScale by animateFloatAsState(
+                    targetValue = if (isPlaying) 1f else 0.85f,
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                    label = "artworkScale"
+                )
+                
                 AsyncImage(
                     model = song.coverUrl,
                     contentDescription = null,
@@ -85,6 +93,7 @@ fun PlayerScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
+                        .scale(artworkScale)
                         .clip(RoundedCornerShape(Dimens.RadiusExtraLarge))
                 )
                 Spacer(modifier = Modifier.height(Dimens.PaddingLarge))
@@ -140,7 +149,7 @@ fun PlayerScreen(
         if (showQueueSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showQueueSheet = false },
-                dragHandle = { BottomSheetDefaults.DragHandle(color = Color.White) }
+                dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.onSurfaceVariant) }
             ) {
                 RoomQueueContent(
                     participants = participants,
@@ -235,12 +244,21 @@ fun PlayerControls(
                 color = MaterialTheme.colorScheme.onSurface
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = if (isPlaying) Icons.Default.PauseCircleFilled else Icons.Default.PlayCircleFilled,
-                        contentDescription = "Play/Pause",
-                        tint = MaterialTheme.colorScheme.surface,
-                        modifier = Modifier.size(64.dp)
-                    )
+                    AnimatedContent(
+                        targetState = isPlaying,
+                        transitionSpec = {
+                            scaleIn(animationSpec = tween(400)) + fadeIn() togetherWith
+                            scaleOut(animationSpec = tween(400)) + fadeOut()
+                        },
+                        label = "playPauseMain"
+                    ) { playing ->
+                        Icon(
+                            imageVector = if (playing) Icons.Default.PauseCircleFilled else Icons.Default.PlayCircleFilled,
+                            contentDescription = "Play/Pause",
+                            tint = MaterialTheme.colorScheme.surface,
+                            modifier = Modifier.size(64.dp)
+                        )
+                    }
                 }
             }
 
@@ -290,7 +308,7 @@ fun RoomQueueContent(
     }
 
     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-        Text("Listening Now", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Text("Listening Now", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 18.sp)
         Row(modifier = Modifier.padding(vertical = 12.dp).fillMaxWidth()) {
             participants.forEach { user ->
                 AsyncImage(
@@ -299,12 +317,12 @@ fun RoomQueueContent(
                     modifier = Modifier.size(40.dp).clip(CircleShape).padding(4.dp)
                 )
             }
-            if (participants.isEmpty()) Text("No other users joined yet", color = Color.Gray, fontSize = 12.sp)
+            if (participants.isEmpty()) Text("No other users joined yet", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 12.sp)
         }
         
-        HorizontalDivider(color = Color.White.copy(alpha = 0.1f), modifier = Modifier.padding(vertical = 8.dp))
+        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), modifier = Modifier.padding(vertical = 8.dp))
         
-        Text("Queue", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Text("Queue", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 18.sp)
         LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
             items(queuedSongs) { song ->
                 Row(
@@ -317,16 +335,16 @@ fun RoomQueueContent(
                         modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp))
                     )
                     Column(modifier = Modifier.padding(horizontal = 12.dp).weight(1f)) {
-                        Text(song.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                        Text(song.artist, color = Color.Gray, fontSize = 12.sp, maxLines = 1)
+                        Text(song.title, color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                        Text(song.artist, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 12.sp, maxLines = 1)
                     }
                     IconButton(onClick = { onRemoveItem(song._id) }) {
-                        Icon(Icons.Default.Close, contentDescription = "Remove", tint = Color.Gray)
+                        Icon(Icons.Default.Close, contentDescription = "Remove", tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
                     }
                 }
             }
             if (queuedSongs.isEmpty()) {
-                item { Text("Nothing in the queue", color = Color.Gray, modifier = Modifier.padding(vertical = 24.dp)) }
+                item { Text("Nothing in the queue", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), modifier = Modifier.padding(vertical = 24.dp)) }
             }
         }
         Spacer(modifier = Modifier.height(32.dp))

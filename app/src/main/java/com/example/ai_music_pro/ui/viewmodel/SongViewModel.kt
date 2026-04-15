@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.example.ai_music_pro.util.LocalMusicProvider
+import android.content.Context
 import javax.inject.Inject
 
 @HiltViewModel
@@ -34,6 +36,9 @@ class SongViewModel @Inject constructor(
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _localSongs = MutableStateFlow<List<Song>>(emptyList())
+    val localSongs: StateFlow<List<Song>> = _localSongs.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
@@ -151,6 +156,10 @@ class SongViewModel @Inject constructor(
                     is RoomEvent.UserKicked -> {
                         _participants.value = _participants.value.filter { it.id != event.userId }
                     }
+                    is RoomEvent.Error -> {
+                        _error.value = event.message
+                        _currentRoomId.value = null
+                    }
                     else -> {}
                 }
             }
@@ -201,6 +210,13 @@ class SongViewModel @Inject constructor(
 
     fun createRoom() {
         socketManager.createRoom()
+    }
+
+    fun fetchLocalSongs(context: Context) {
+        viewModelScope.launch {
+            val local = LocalMusicProvider.fetchLocalSongs(context)
+            _localSongs.value = local
+        }
     }
 
     fun syncPlay(currentTimeMs: Long, songId: String) {
