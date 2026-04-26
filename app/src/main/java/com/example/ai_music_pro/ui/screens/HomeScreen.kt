@@ -42,6 +42,7 @@ fun HomeScreen(
     allSongs: List<Song>,
     filteredSongs: List<Song>,
     carousels: List<CarouselItem>,
+    categories: List<String>,
     onSongClick: (Song) -> Unit,
     onJoinRoom: (String) -> Unit,
     onCreateRoom: () -> Unit,
@@ -119,6 +120,7 @@ fun HomeScreen(
                                 onValueChange = onSearchQueryChange,
                                 placeholder = "Search music...",
                                 leadingIcon = Icons.Default.Search,
+                                isSearch = true,
                                 modifier = Modifier.padding(horizontal = Dimens.PaddingDefault, vertical = Dimens.PaddingSmall)
                             )
                         }
@@ -164,9 +166,8 @@ fun HomeScreen(
                                 contentPadding = PaddingValues(horizontal = 16.dp),
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                val categories = listOf("Classic", "Romantic", "Rock", "Soul", "Pop")
-                                items(categories) { category ->
-                                    CategoryItem(name = category, onClick = { onSearchQueryChange(category) })
+                                items(categories.ifEmpty { listOf("Pop", "Rock", "Classical", "Jazz", "Hip Hop", "Electronic") }) { category ->
+                                    CategoryRichItem(name = category, onClick = { onSearchQueryChange(category) })
                                 }
                             }
                         }
@@ -383,6 +384,43 @@ fun QuickAccessSection(items: List<QuickAccessItem>, onItemClick: (String) -> Un
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun CategoryRichItem(name: String, onClick: () -> Unit) {
+    val colors = listOf(
+        Color(0xFFE91E63), Color(0xFF9C27B0), Color(0xFF673AB7), 
+        Color(0xFF3F51B5), Color(0xFF009688), Color(0xFFFF9800)
+    )
+    val color = remember(name) { colors[name.hashCode() % colors.size.let { if (it < 0) it + colors.size else it }] }
+
+    Card(
+        modifier = Modifier
+            .width(160.dp)
+            .height(100.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.linearGradient(
+                        listOf(color.copy(alpha = 0.7f), color)
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = name.uppercase(),
+                color = Color.White,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 18.sp,
+                modifier = Modifier.padding(8.dp)
+            )
         }
     }
 }

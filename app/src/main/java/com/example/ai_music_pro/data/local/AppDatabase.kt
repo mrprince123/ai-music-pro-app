@@ -7,8 +7,8 @@ import com.example.ai_music_pro.data.local.entities.LocalAlbumEntity
 import com.example.ai_music_pro.data.local.entities.SearchHistoryEntity
 
 @Database(
-    entities = [LikedSongEntity::class, SearchHistoryEntity::class, LocalAlbumEntity::class],
-    version = 1,
+    entities = [LikedSongEntity::class, SearchHistoryEntity::class, LocalAlbumEntity::class, com.example.ai_music_pro.data.local.entities.RecentlyPlayedEntity::class],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

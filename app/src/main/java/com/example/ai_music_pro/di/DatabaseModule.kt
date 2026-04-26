@@ -22,7 +22,8 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "ai_music_pro_db"
-        ).build()
+        ).fallbackToDestructiveMigration()
+        .build()
     }
 
     @Provides

@@ -30,6 +30,8 @@ import com.example.ai_music_pro.ui.theme.SurfaceGray
 @Composable
 fun ProfileScreen(
     onSettingsClick: () -> Unit,
+    onLikedSongsClick: () -> Unit = {},
+    onRecentPlayedClick: () -> Unit = {},
     onLogoutClick: () -> Unit,
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
@@ -97,9 +99,9 @@ fun ProfileScreen(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-            ProfileMenuItem("Your Liked Songs", Icons.Default.Favorite, Color.Red)
+            ProfileMenuItem("Your Liked Songs", Icons.Default.Favorite, Color.Red, onClick = onLikedSongsClick)
             ProfileMenuItem("Your Uploads", Icons.Default.CloudUpload, LunkgemBlue)
-            ProfileMenuItem("Recently Played", Icons.Default.History, Color.Gray)
+            ProfileMenuItem("Recently Played", Icons.Default.History, Color.Gray, onClick = onRecentPlayedClick)
         }
 
         item {

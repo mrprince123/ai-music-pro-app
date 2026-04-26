@@ -43,4 +43,11 @@ interface MusicDao {
 
     @Query("DELETE FROM local_albums WHERE id = :albumId")
     suspend fun deleteLocalAlbum(albumId: String)
+
+    // Recently Played
+    @Query("SELECT * FROM recently_played ORDER BY playedAt DESC LIMIT 30")
+    fun getRecentlyPlayed(): Flow<List<com.example.ai_music_pro.data.local.entities.RecentlyPlayedEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRecentlyPlayed(song: com.example.ai_music_pro.data.local.entities.RecentlyPlayedEntity)
 }

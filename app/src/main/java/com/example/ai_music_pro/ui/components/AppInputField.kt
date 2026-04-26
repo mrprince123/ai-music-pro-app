@@ -15,6 +15,7 @@ import com.example.ai_music_pro.ui.theme.SurfaceGray
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
@@ -30,6 +31,7 @@ fun AppInputField(
     leadingIcon: ImageVector? = null,
     modifier: Modifier = Modifier,
     isPassword: Boolean = false,
+    isSearch: Boolean = false,
     keyboardType: KeyboardType = KeyboardType.Text,
     singleLine: Boolean = true
 ) {
@@ -63,6 +65,16 @@ fun AppInputField(
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                         contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                }
+            }
+        } else if (isSearch && value.isNotEmpty()) {
+            {
+                IconButton(onClick = { onValueChange("") }) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "Clear text",
                         tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
                 }

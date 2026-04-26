@@ -55,7 +55,8 @@ fun SearchScreen(
             value = searchQuery,
             onValueChange = { viewModel.onQueryChange(it) },
             placeholder = "What do you want to listen to?",
-            leadingIcon = Icons.Default.Search
+            leadingIcon = Icons.Default.Search,
+            isSearch = true
         )
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {

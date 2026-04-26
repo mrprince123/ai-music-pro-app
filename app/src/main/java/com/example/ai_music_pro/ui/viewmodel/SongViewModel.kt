@@ -44,6 +44,15 @@ class SongViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    private val _categories = MutableStateFlow<List<String>>(emptyList())
+    val categories: StateFlow<List<String>> = _categories.asStateFlow()
+
+    private val _recentlyPlayed = MutableStateFlow<List<Song>>(emptyList())
+    val recentlyPlayed: StateFlow<List<Song>> = _recentlyPlayed.asStateFlow()
+
+    private val _likedSongsList = MutableStateFlow<List<Song>>(emptyList())
+    val likedSongsList: StateFlow<List<Song>> = _likedSongsList.asStateFlow()
+
     // Room State
     private val _currentRoomId = MutableStateFlow<String?>(null)
     val currentRoomId: StateFlow<String?> = _currentRoomId.asStateFlow()
@@ -52,6 +61,9 @@ class SongViewModel @Inject constructor(
         fetchSongs()
         fetchCarousels()
         observeSocketEvents()
+        fetchCategories()
+        fetchRecentlyPlayed()
+        fetchLikedSongsList()
         socketManager.connect()
         
         viewModelScope.launch {
@@ -73,6 +85,40 @@ class SongViewModel @Inject constructor(
                 .onSuccess { list ->
                     _carousels.value = list.shuffled() // Show carousels on random basis
                 }
+        }
+    }
+
+    private fun fetchCategories() {
+        viewModelScope.launch {
+            repository.getCategories()
+                .onSuccess { list ->
+                    _categories.value = list
+                }
+                .onFailure { 
+                    // Fallback to extracting from songs later in fetchSongs
+                }
+        }
+    }
+
+    private fun fetchRecentlyPlayed() {
+        viewModelScope.launch {
+            repository.getRecentlyPlayed().collect { list ->
+                _recentlyPlayed.value = list
+            }
+        }
+    }
+
+    private fun fetchLikedSongsList() {
+        viewModelScope.launch {
+            repository.getLikedSongs().collect { list ->
+                _likedSongsList.value = list
+            }
+        }
+    }
+
+    fun recordRecentPlay(song: Song) {
+        viewModelScope.launch {
+            repository.addRecentlyPlayed(song)
         }
     }
 
@@ -198,6 +244,11 @@ class SongViewModel @Inject constructor(
                 .onSuccess { response ->
                     val likedIds = repository.getLikedSongs().first().map { it._id }.toSet()
                     _songs.value = response.songs.map { it.copy(isLiked = likedIds.contains(it._id)) }
+
+                    if (_categories.value.isEmpty()) {
+                        val uniqueCategories = response.songs.mapNotNull { it.category.takeIf { c -> c.isNotBlank() } }.distinct()
+                        _categories.value = uniqueCategories
+                    }
                 }
                 .onFailure { exception ->
                     _error.value = exception.message ?: "Unknown error occurred"

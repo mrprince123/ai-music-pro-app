@@ -28,3 +28,14 @@ data class LocalAlbumEntity(
     val songIds: String, // Comma separated IDs or JSON string
     val createdAt: Long = System.currentTimeMillis()
 )
+
+@Entity(tableName = "recently_played")
+data class RecentlyPlayedEntity(
+    @PrimaryKey val id: String,
+    val title: String,
+    val artist: String,
+    val coverUrl: String,
+    val songUrl: String,
+    val duration: Long,
+    val playedAt: Long = System.currentTimeMillis()
+)

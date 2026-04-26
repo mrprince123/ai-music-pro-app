@@ -36,6 +36,15 @@ class SongRepository @Inject constructor(
         }
     }
 
+    suspend fun getCategories(): Result<List<String>> {
+        return try {
+            val response = apiService.getCategories()
+            Result.success(response)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun getSong(id: String): Result<Song> {
         return try {
             val response = apiService.getSong(id)
@@ -61,6 +70,17 @@ class SongRepository @Inject constructor(
     }
 
     fun isSongLiked(id: String): Flow<Boolean> = musicDao.isSongLiked(id)
+
+    // Recently Played
+    fun getRecentlyPlayed(): Flow<List<Song>> {
+        return musicDao.getRecentlyPlayed().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
+    suspend fun addRecentlyPlayed(song: Song) {
+        musicDao.insertRecentlyPlayed(song.toRecentlyPlayedEntity())
+    }
 
     // Search History
     fun getSearchHistory(): Flow<List<String>> = musicDao.getSearchHistory().map { list -> list.map { it.query } }
@@ -120,6 +140,26 @@ fun LikedSongEntity.toDomain() = Song(
 )
 
 fun Song.toEntity() = LikedSongEntity(
+    id = _id,
+    title = title,
+    artist = artist,
+    coverUrl = coverUrl,
+    songUrl = songUrl,
+    duration = duration
+)
+
+fun com.example.ai_music_pro.data.local.entities.RecentlyPlayedEntity.toDomain() = Song(
+    _id = id,
+    title = title,
+    artist = artist,
+    duration = duration,
+    songUrl = songUrl,
+    coverUrl = coverUrl,
+    category = "",
+    description = null
+)
+
+fun Song.toRecentlyPlayedEntity() = com.example.ai_music_pro.data.local.entities.RecentlyPlayedEntity(
     id = _id,
     title = title,
     artist = artist,

@@ -29,6 +29,9 @@ interface ApiService {
     @GET("/songs/{id}")
     suspend fun getSong(@Path("id") id: String): Song
 
+    @GET("/categories")
+    suspend fun getCategories(): List<String>
+
     // 3. Favorites (Protected)
     @GET("/users/favorites")
     suspend fun getFavorites(): StandardResponse<List<Song>>

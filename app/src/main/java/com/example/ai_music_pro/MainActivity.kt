@@ -122,6 +122,7 @@ class MainActivity : ComponentActivity() {
                         player.prepare()
                         player.play()
                         playbackState = playbackState.copy(currentSong = song)
+                        songViewModel.recordRecentPlay(song)
                         songViewModel.syncPlay(0L, song._id)
                     }
                 }
@@ -246,6 +247,7 @@ class MainActivity : ComponentActivity() {
                                             allSongs = songs,
                                             filteredSongs = filteredSongs,
                                             carousels = carousels,
+                                            categories = songViewModel.categories.collectAsState().value,
                                             searchQuery = searchQuery,
                                             onSearchQueryChange = { songViewModel.setSearchQuery(it) },
                                             onSettingsClick = { navController.navigate(Screen.Settings.route) },
@@ -314,6 +316,8 @@ class MainActivity : ComponentActivity() {
                                         ProfileScreen(
                                             authViewModel = authViewModel,
                                             onSettingsClick = { navController.navigate(Screen.Settings.route) },
+                                            onLikedSongsClick = { navController.navigate(Screen.LikedList.route) },
+                                            onRecentPlayedClick = { navController.navigate(Screen.RecentList.route) },
                                             onLogoutClick = {
                                                 navController.navigate(Screen.Login.route) {
                                                     popUpTo(0) { inclusive = true }
@@ -372,6 +376,32 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
 
+                                    composable(Screen.RecentList.route) {
+                                        val recentSongs by songViewModel.recentlyPlayed.collectAsState()
+                                        ListScreen(
+                                            title = "Recently Played",
+                                            songs = recentSongs,
+                                            onBackClick = { navController.popBackStack() },
+                                            onSongClick = { 
+                                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                                handleSongClick(it) 
+                                            },
+                                            onLikeClick = { songId -> songViewModel.toggleLike(songId) }
+                                        )
+                                    }
+                                    composable(Screen.LikedList.route) {
+                                        val likedSongs by songViewModel.likedSongsList.collectAsState()
+                                        ListScreen(
+                                            title = "Liked Songs",
+                                            songs = likedSongs,
+                                            onBackClick = { navController.popBackStack() },
+                                            onSongClick = { 
+                                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                                handleSongClick(it) 
+                                            },
+                                            onLikeClick = { songId -> songViewModel.toggleLike(songId) }
+                                        )
+                                    }
                                 }
 
                                 // Mini Player above the bottom bar
