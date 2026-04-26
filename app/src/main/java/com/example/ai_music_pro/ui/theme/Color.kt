@@ -18,3 +18,14 @@ val LightTextSecondary = Color(0xFF757575)
 val LightCardBackground = Color(0xFFF1F3F4)
 
 val AccentGradient = listOf(Color(0xFF1DB954), Color(0xFF000000))
+
+// --- Player & Lyrics Colors ---
+val PlayerBackground = Color(0xFF0A0A0A)
+val GlassWhite = Color(0x1AFFFFFF)
+val GlassBorder = Color(0x33FFFFFF)
+val LyricActive = SpotifyGreen
+val LyricInactive = Color(0x66FFFFFF)
+val DeviceIconTint = Color(0xFFB3B3B3)
+val PlayerGradientTop = Color(0xFF1A3A1A)
+val MiniPlayerGlass = Color(0xE6181818)
+

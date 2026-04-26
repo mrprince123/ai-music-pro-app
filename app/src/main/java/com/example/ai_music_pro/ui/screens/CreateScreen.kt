@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -30,6 +31,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun CreateScreen(
     viewModel: CreateAlbumViewModel = hiltViewModel(),
+    onBackClick: () -> Unit = {},
     onComplete: (String) -> Unit = {}
 ) {
     var albumName by remember { mutableStateOf("") }
@@ -45,13 +47,26 @@ fun CreateScreen(
             .padding(16.dp)
     ) {
         SnackbarHost(hostState = snackbarHostState)
-        Text(
-            text = "Create Album",
-            color = MaterialTheme.colorScheme.onSurface,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
+        
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(vertical = 16.dp)
-        )
+        ) {
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Create Album",
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
         AppInputField(
             value = albumName,

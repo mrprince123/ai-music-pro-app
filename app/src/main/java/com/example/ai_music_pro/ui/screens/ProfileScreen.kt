@@ -1,6 +1,7 @@
 package com.example.ai_music_pro.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,6 +35,7 @@ fun ProfileScreen(
     onLikedSongsClick: () -> Unit = {},
     onRecentPlayedClick: () -> Unit = {},
     onLogoutClick: () -> Unit,
+    onBackClick: (() -> Unit)? = null,
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val authState by authViewModel.authState.collectAsState()
@@ -61,75 +64,92 @@ fun ProfileScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = Dimens.PaddingDefault)
     ) {
-// ... keep items
         item {
-            Spacer(modifier = Modifier.height(48.dp))
-            ProfileHeader(
-                name = user?.name ?: "Guest User",
-                email = user?.email ?: "Log in to sync your data",
-                role = user?.role ?: "user",
-                authProvider = user?.authProvider ?: "email",
-                createdAt = user?.createdAt,
-                phoneNumber = user?.phoneNumber,
-                profilePhoto = user?.profilePhoto,
-                onSettingsClick = onSettingsClick
-            )
-        }
-
-        item {
-            Spacer(modifier = Modifier.height(32.dp))
-            Row(
+            // Glassy Header Background
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                tonalElevation = 2.dp
             ) {
-                ProfileStat("Playlists", "12")
-                ProfileStat("Followers", "248")
-                ProfileStat("Following", "156")
+                Column(modifier = Modifier.padding(horizontal = Dimens.PaddingDefault)) {
+                    if (onBackClick != null) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(top = Dimens.PaddingDefault)) {
+                            IconButton(onClick = onBackClick) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.height(48.dp))
+                    }
+                    ProfileHeader(
+                        name = user?.name ?: "Guest User",
+                        email = user?.email ?: "Log in to sync your data",
+                        role = user?.role ?: "user",
+                        authProvider = user?.authProvider ?: "email",
+                        createdAt = user?.createdAt,
+                        phoneNumber = user?.phoneNumber,
+                        profilePhoto = user?.profilePhoto,
+                        onSettingsClick = onSettingsClick
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        ProfileStat("Playlists", "12")
+                        ProfileStat("Followers", "248")
+                        ProfileStat("Following", "156")
+                    }
+                }
             }
         }
 
         item {
-            Spacer(modifier = Modifier.height(32.dp))
-            Text(
-                text = "Library",
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            ProfileMenuItem("Your Liked Songs", Icons.Default.Favorite, Color.Red, onClick = onLikedSongsClick)
-            ProfileMenuItem("Your Uploads", Icons.Default.CloudUpload, LunkgemBlue)
-            ProfileMenuItem("Recently Played", Icons.Default.History, Color.Gray, onClick = onRecentPlayedClick)
-        }
+            Column(modifier = Modifier.padding(horizontal = Dimens.PaddingDefault)) {
+                Spacer(modifier = Modifier.height(32.dp))
+                Text(
+                    text = "Library",
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                ProfileMenuItem("Your Liked Songs", Icons.Default.Favorite, Color.Red, onClick = onLikedSongsClick)
+                ProfileMenuItem("Your Uploads", Icons.Default.CloudUpload, LunkgemBlue)
+                ProfileMenuItem("Recently Played", Icons.Default.History, Color.Gray, onClick = onRecentPlayedClick)
 
-        item {
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "Account",
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            ProfileMenuItem("Settings", Icons.Default.Settings, Color.Gray, onClick = onSettingsClick)
-            ProfileMenuItem("Subscription", Icons.Default.Star, Color(0xFFFFD700))
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Button(
-                onClick = { showLogoutDialog = true },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red.copy(alpha = 0.1f),
-                    contentColor = Color.Red
-                ),
-                shape = RoundedCornerShape(Dimens.RadiusMedium)
-            ) {
-                Icon(Icons.Default.Logout, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Logout", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = "Account",
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                ProfileMenuItem("Settings", Icons.Default.Settings, Color.Gray, onClick = onSettingsClick)
+                ProfileMenuItem("Subscription", Icons.Default.Star, Color(0xFFFFD700))
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Button(
+                    onClick = { showLogoutDialog = true },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red.copy(alpha = 0.1f),
+                        contentColor = Color.Red
+                    ),
+                    shape = RoundedCornerShape(Dimens.RadiusMedium),
+                    border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.Red.copy(alpha = 0.2f))
+                ) {
+                    Icon(Icons.Default.Logout, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Logout", fontWeight = FontWeight.Bold)
+                }
             }
         }
         

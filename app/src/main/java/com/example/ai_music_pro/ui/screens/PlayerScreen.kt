@@ -5,6 +5,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,6 +19,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
@@ -31,10 +33,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.ai_music_pro.R
+import com.example.ai_music_pro.domain.model.AudioOutputDevice
+import com.example.ai_music_pro.domain.model.LyricLine
 import com.example.ai_music_pro.domain.model.Song
-import com.example.ai_music_pro.ui.theme.Dimens
-import com.example.ai_music_pro.ui.theme.LunkgemBlue
-import com.example.ai_music_pro.ui.theme.SpotifyGreen
+import com.example.ai_music_pro.ui.components.AudioOutputSheet
+import com.example.ai_music_pro.ui.components.LyricsView
+import com.example.ai_music_pro.ui.theme.*
 import androidx.compose.material.icons.automirrored.filled.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,34 +58,70 @@ fun PlayerScreen(
     queue: List<String> = emptyList(),
     allSongs: List<com.example.ai_music_pro.domain.model.Song> = emptyList(),
     onRemoveQueueItem: (String) -> Unit = {},
-    onLikeClick: (String) -> Unit = {}
+    onLikeClick: (String) -> Unit = {},
+    // New: Lyrics support
+    syncedLyrics: List<LyricLine> = emptyList(),
+    staticLyrics: String? = null,
+    lyricsLoading: Boolean = false,
+    currentPositionMs: Long = 0L,
+    // New: Audio output support
+    availableDevices: List<AudioOutputDevice> = emptyList(),
+    activeDevice: AudioOutputDevice? = null,
+    resumeAfterSwitch: Boolean = false,
+    onDeviceSwitch: (AudioOutputDevice) -> Unit = {},
+    onResumeToggle: (Boolean) -> Unit = {}
 ) {
     if (song == null) return
 
     var showLyrics by remember { mutableStateOf(false) }
     var showQueueSheet by remember { mutableStateOf(false) }
+    var showDeviceSheet by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        SpotifyGreen,
-                        MaterialTheme.colorScheme.background
+            .background(PlayerBackground)
+    ) {
+        // Ambient glow from album art (blurred background layer)
+        AsyncImage(
+            model = song.coverUrl,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .blur(120.dp)
+                .scale(1.3f)
+        )
+        // Dark overlay
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Black.copy(alpha = 0.6f),
+                            Color.Black.copy(alpha = 0.85f),
+                            Color.Black.copy(alpha = 0.95f)
+                        )
                     )
                 )
-            )
-    ) {
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = Dimens.PaddingDefault)
         ) {
             // Top Bar
-            PlayerTopBar(onCloseClick = onCloseClick, showLyrics = showLyrics, onLyricsToggle = { showLyrics = it })
+            PlayerTopBar(
+                onCloseClick = onCloseClick,
+                showLyrics = showLyrics,
+                onLyricsToggle = { showLyrics = it },
+                onDevicesClick = { showDeviceSheet = true },
+                activeDeviceName = activeDevice?.name
+            )
 
-            // Main Centered Content (Artwork, Text, Controls)
+            // Main Centered Content
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -91,52 +131,100 @@ fun PlayerScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 if (showLyrics) {
-                    LyricsSection(song = song)
+                    LyricsView(
+                        song = song,
+                        staticLyrics = staticLyrics,
+                        syncedLyrics = syncedLyrics,
+                        currentPositionMs = currentPositionMs,
+                        isLoading = lyricsLoading,
+                        modifier = Modifier.padding(vertical = Dimens.PaddingDefault)
+                    )
                 } else {
                     // Artwork with scale animation
                     val artworkScale by animateFloatAsState(
-                        targetValue = if (isPlaying) 1f else 0.85f,
+                        targetValue = if (isPlaying) 1f else 0.88f,
                         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
                         label = "artworkScale"
                     )
-                    
-                    AsyncImage(
-                        model = song.coverUrl,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth(0.9f) // Slight inset to look more premium
-                            .aspectRatio(1f)
-                            .scale(artworkScale)
-                            .clip(RoundedCornerShape(Dimens.RadiusExtraLarge))
-                    )
-                    Spacer(modifier = Modifier.height(24.dp)) // Adequate spacing
-                    
-                    // Info
-                    Text(
-                        text = song.title,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = song.artist,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        fontSize = 18.sp,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.fillMaxWidth()
-                    )
 
+                    Spacer(modifier = Modifier.height(16.dp))
                     
-                    Spacer(modifier = Modifier.height(32.dp)) // Separation before controls
-                    
+                    // Album art with ambient glow ring
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        // Subtle glow ring behind art
+                        if (isPlaying) {
+                            val pulseAlpha by rememberInfiniteTransition(label = "pulse").animateFloat(
+                                initialValue = 0.15f,
+                                targetValue = 0.35f,
+                                animationSpec = infiniteRepeatable(
+                                    animation = tween(2000),
+                                    repeatMode = RepeatMode.Reverse
+                                ),
+                                label = "glowPulse"
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.88f)
+                                    .aspectRatio(1f)
+                                    .scale(1.05f)
+                                    .clip(RoundedCornerShape(Dimens.RadiusExtraLarge))
+                                    .background(SpotifyGreen.copy(alpha = pulseAlpha))
+                            )
+                        }
+
+                        AsyncImage(
+                            model = song.coverUrl,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxWidth(0.85f)
+                                .aspectRatio(1f)
+                                .scale(artworkScale)
+                                .clip(RoundedCornerShape(Dimens.RadiusExtraLarge))
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(28.dp))
+
+                    // Song Info
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = song.title,
+                                color = Color.White,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = song.artist,
+                                color = Color.White.copy(alpha = 0.6f),
+                                fontSize = 16.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                        IconButton(onClick = { onLikeClick(song._id) }) {
+                            Icon(
+                                imageVector = if (song.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = "Like",
+                                tint = if (song.isLiked) Color.Red else Color.White.copy(alpha = 0.7f),
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Controls
                     PlayerControls(
                         isPlaying = isPlaying,
                         progress = progress,
@@ -146,18 +234,51 @@ fun PlayerScreen(
                         onSeek = onSeek,
                         onPreviousClick = onPreviousClick,
                         onNextClick = onNextClick,
-                        onQueueClick = { showQueueSheet = true },
-                        isLiked = song.isLiked,
-                        onLikeClick = { onLikeClick(song._id) }
+                        onQueueClick = { showQueueSheet = true }
                     )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Device pill
+                    if (activeDevice != null) {
+                        Surface(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(20.dp))
+                                .clickable { showDeviceSheet = true },
+                            color = SpotifyGreen.copy(alpha = 0.12f),
+                            shape = RoundedCornerShape(20.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Speaker,
+                                    contentDescription = null,
+                                    tint = SpotifyGreen,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = activeDevice.name,
+                                    color = SpotifyGreen,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
 
+        // Queue Sheet
         if (showQueueSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showQueueSheet = false },
-                dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                containerColor = Color(0xE6181818),
+                shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
             ) {
                 RoomQueueContent(
                     participants = participants,
@@ -167,35 +288,74 @@ fun PlayerScreen(
                 )
             }
         }
+
+        // Device Sheet
+        if (showDeviceSheet) {
+            AudioOutputSheet(
+                availableDevices = availableDevices,
+                activeDevice = activeDevice,
+                resumeAfterSwitch = resumeAfterSwitch,
+                onDeviceSelect = { device ->
+                    onDeviceSwitch(device)
+                    showDeviceSheet = false
+                },
+                onResumeToggle = onResumeToggle,
+                onDismiss = { showDeviceSheet = false }
+            )
+        }
     }
 }
 
 @Composable
-fun PlayerTopBar(onCloseClick: () -> Unit, showLyrics: Boolean, onLyricsToggle: (Boolean) -> Unit) {
+fun PlayerTopBar(
+    onCloseClick: () -> Unit,
+    showLyrics: Boolean,
+    onLyricsToggle: (Boolean) -> Unit,
+    onDevicesClick: () -> Unit = {},
+    activeDeviceName: String? = null
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 32.dp, bottom = Dimens.PaddingDefault),
+            .padding(top = 40.dp, bottom = Dimens.PaddingDefault),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onCloseClick) {
-            Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(Dimens.IconSizeLarge))
+            Icon(
+                Icons.Default.KeyboardArrowDown,
+                contentDescription = "Close",
+                tint = Color.White,
+                modifier = Modifier.size(Dimens.IconSizeLarge)
+            )
         }
 
         Text(
-            text = if (showLyrics) "Lyrics" else "Playing from Album",
-            color = MaterialTheme.colorScheme.onSurface,
+            text = if (showLyrics) "Lyrics" else "Now Playing",
+            color = Color.White,
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold
         )
 
-        IconButton(onClick = { onLyricsToggle(!showLyrics) }) {
-            Icon(
-                imageVector = if (showLyrics) Icons.Default.Star else Icons.Default.Menu,
-                contentDescription = null,
-                tint = if (showLyrics) LunkgemBlue else MaterialTheme.colorScheme.onSurface
-            )
+        Row {
+            // Devices button
+            IconButton(onClick = onDevicesClick) {
+                Icon(
+                    imageVector = Icons.Default.DevicesOther,
+                    contentDescription = "Audio Output",
+                    tint = Color.White.copy(alpha = 0.7f),
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+            // Lyrics toggle
+            IconButton(onClick = { onLyricsToggle(!showLyrics) }) {
+                Icon(
+                    imageVector = if (showLyrics) Icons.Default.Album else Icons.Default.Lyrics,
+                    contentDescription = "Toggle Lyrics",
+                    tint = if (showLyrics) SpotifyGreen else Color.White.copy(alpha = 0.7f),
+                    modifier = Modifier.size(22.dp)
+                )
+            }
         }
     }
 }
@@ -215,92 +375,102 @@ fun PlayerControls(
     onLikeClick: () -> Unit = {}
 ) {
     Column {
+        // Progress slider
         Slider(
             value = progress,
             onValueChange = onSeek,
             colors = SliderDefaults.colors(
-                thumbColor = MaterialTheme.colorScheme.onSurface,
-                activeTrackColor = MaterialTheme.colorScheme.primary,
-                inactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                thumbColor = Color.White,
+                activeTrackColor = SpotifyGreen,
+                inactiveTrackColor = Color.White.copy(alpha = 0.15f)
             ),
             modifier = Modifier.fillMaxWidth()
         )
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(text = elapsedTime, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 12.sp)
-            Text(text = totalTime, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 12.sp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = elapsedTime,
+                color = Color.White.copy(alpha = 0.5f),
+                fontSize = 12.sp
+            )
+            Text(
+                text = totalTime,
+                color = Color.White.copy(alpha = 0.5f),
+                fontSize = 12.sp
+            )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
+        // Playback controls
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onLikeClick) { 
+            IconButton(onClick = { /* Shuffle */ }) {
                 Icon(
-                    imageVector = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder, 
-                    null, 
-                    tint = if (isLiked) Color.Red else MaterialTheme.colorScheme.onSurface 
-                ) 
+                    Icons.Default.Shuffle,
+                    null,
+                    tint = Color.White.copy(alpha = 0.6f),
+                    modifier = Modifier.size(22.dp)
+                )
             }
-            IconButton(onClick = onPreviousClick) { Icon(Icons.Default.SkipPrevious, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(Dimens.IconSizeLarge)) }
-            
+            IconButton(onClick = onPreviousClick) {
+                Icon(
+                    Icons.Default.SkipPrevious,
+                    null,
+                    tint = Color.White,
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+
+            // Play/Pause button
             Surface(
-                modifier = Modifier.size(72.dp).clickable { onPlayPauseClick() },
+                modifier = Modifier
+                    .size(68.dp)
+                    .clickable { onPlayPauseClick() },
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.onSurface
+                color = SpotifyGreen
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     AnimatedContent(
                         targetState = isPlaying,
                         transitionSpec = {
-                            scaleIn(animationSpec = tween(400)) + fadeIn() togetherWith
-                            scaleOut(animationSpec = tween(400)) + fadeOut()
+                            scaleIn(animationSpec = tween(300)) + fadeIn() togetherWith
+                            scaleOut(animationSpec = tween(300)) + fadeOut()
                         },
                         label = "playPauseMain"
                     ) { playing ->
                         Icon(
-                            imageVector = if (playing) Icons.Default.PauseCircleFilled else Icons.Default.PlayCircleFilled,
+                            imageVector = if (playing) Icons.Default.Pause else Icons.Default.PlayArrow,
                             contentDescription = "Play/Pause",
-                            tint = MaterialTheme.colorScheme.surface,
-                            modifier = Modifier.size(64.dp)
+                            tint = Color.Black,
+                            modifier = Modifier.size(36.dp)
                         )
                     }
                 }
             }
 
-            IconButton(onClick = onNextClick) { Icon(Icons.Default.SkipNext, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(Dimens.IconSizeLarge)) }
-            IconButton(onClick = onQueueClick) { Icon(Icons.Default.QueueMusic, null, tint = MaterialTheme.colorScheme.onSurface) }
+            IconButton(onClick = onNextClick) {
+                Icon(
+                    Icons.Default.SkipNext,
+                    null,
+                    tint = Color.White,
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+            IconButton(onClick = onQueueClick) {
+                Icon(
+                    Icons.Default.QueueMusic,
+                    null,
+                    tint = Color.White.copy(alpha = 0.6f),
+                    modifier = Modifier.size(22.dp)
+                )
+            }
         }
-    }
-}
-
-@Composable
-fun LyricsSection(song: Song) {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.PaddingDefault),
-        horizontalAlignment = Alignment.Start
-    ) {
-        Text(
-            text = song.title,
-            color = MaterialTheme.colorScheme.onSurface,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = song.artist,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            fontSize = 16.sp
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-        Text(
-            text = if (!song.description.isNullOrEmpty()) song.description else "No description or lyrics available.",
-            color = MaterialTheme.colorScheme.onSurface,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Medium,
-            lineHeight = 30.sp
-        )
     }
 }
 
@@ -316,7 +486,12 @@ fun RoomQueueContent(
     }
 
     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-        Text("Listening Now", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Text(
+            "Listening Now",
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp
+        )
         Row(modifier = Modifier.padding(vertical = 12.dp).fillMaxWidth()) {
             participants.forEach { user ->
                 AsyncImage(
@@ -325,12 +500,24 @@ fun RoomQueueContent(
                     modifier = Modifier.size(40.dp).clip(CircleShape).padding(4.dp)
                 )
             }
-            if (participants.isEmpty()) Text("No other users joined yet", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 12.sp)
+            if (participants.isEmpty()) Text(
+                "No other users joined yet",
+                color = Color.White.copy(alpha = 0.6f),
+                fontSize = 12.sp
+            )
         }
         
-        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), modifier = Modifier.padding(vertical = 8.dp))
+        HorizontalDivider(
+            color = Color.White.copy(alpha = 0.1f),
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
         
-        Text("Queue", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Text(
+            "Queue",
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp
+        )
         LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
             items(queuedSongs) { song ->
                 Row(
@@ -343,16 +530,37 @@ fun RoomQueueContent(
                         modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp))
                     )
                     Column(modifier = Modifier.padding(horizontal = 12.dp).weight(1f)) {
-                        Text(song.title, color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                        Text(song.artist, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 12.sp, maxLines = 1)
+                        Text(
+                            song.title,
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1
+                        )
+                        Text(
+                            song.artist,
+                            color = Color.White.copy(alpha = 0.6f),
+                            fontSize = 12.sp,
+                            maxLines = 1
+                        )
                     }
                     IconButton(onClick = { onRemoveItem(song._id) }) {
-                        Icon(Icons.Default.Close, contentDescription = "Remove", tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Remove",
+                            tint = Color.White.copy(alpha = 0.4f)
+                        )
                     }
                 }
             }
             if (queuedSongs.isEmpty()) {
-                item { Text("Nothing in the queue", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), modifier = Modifier.padding(vertical = 24.dp)) }
+                item {
+                    Text(
+                        "Nothing in the queue",
+                        color = Color.White.copy(alpha = 0.4f),
+                        modifier = Modifier.padding(vertical = 24.dp)
+                    )
+                }
             }
         }
         Spacer(modifier = Modifier.height(32.dp))

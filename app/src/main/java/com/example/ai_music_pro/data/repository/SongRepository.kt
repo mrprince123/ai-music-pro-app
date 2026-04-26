@@ -125,6 +125,16 @@ class SongRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+    suspend fun getSongLyrics(songId: String): Result<com.example.ai_music_pro.domain.model.LyricsResponse> {
+        return try {
+            val response = apiService.getSongLyrics(songId)
+            Result.success(response)
+        } catch (e: Exception) {
+            // Fallback: use description from the song itself
+            Result.failure(e)
+        }
+    }
 }
 
 // Mappers

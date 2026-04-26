@@ -17,6 +17,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import com.example.ai_music_pro.audio.EqualizerProvider
+import com.example.ai_music_pro.audio.AudioOutputManager
 import com.example.ai_music_pro.data.repository.SongRepository
 import com.example.ai_music_pro.util.Constants
 import javax.inject.Inject
@@ -33,6 +34,9 @@ class ExoPlayerService : MediaSessionService() {
 
     @Inject
     lateinit var songRepository: SongRepository
+
+    @Inject
+    lateinit var audioOutputManager: AudioOutputManager
 
     private var exoPlayer: ExoPlayer? = null
     private var mediaSession: MediaSession? = null
@@ -58,6 +62,7 @@ class ExoPlayerService : MediaSessionService() {
             .build()
         
         observeSyncEvents()
+        observeDeviceSwitchEvents()
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
@@ -77,6 +82,26 @@ class ExoPlayerService : MediaSessionService() {
                     }
                     is com.example.ai_music_pro.socket.SyncEvent.Seek -> {
                         exoPlayer?.seekTo(event.currentTimeMs)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun observeDeviceSwitchEvents() {
+        serviceScope.launch {
+            audioOutputManager.deviceSwitchRequested.collectLatest { switchRequested ->
+                if (switchRequested) {
+                    val wasPlaying = exoPlayer?.isPlaying == true
+                    // Auto-pause on device change
+                    if (wasPlaying) {
+                        exoPlayer?.pause()
+                    }
+                    audioOutputManager.consumeSwitchEvent()
+                    // Optionally resume after a brief delay
+                    if (wasPlaying && audioOutputManager.resumeAfterSwitch.value) {
+                        kotlinx.coroutines.delay(800)
+                        exoPlayer?.play()
                     }
                 }
             }
@@ -127,6 +152,8 @@ class ExoPlayerService : MediaSessionService() {
             mediaSession = null
         }
         equalizerProvider.equalizerManager.release()
+        audioOutputManager.release()
         super.onDestroy()
     }
 }
+

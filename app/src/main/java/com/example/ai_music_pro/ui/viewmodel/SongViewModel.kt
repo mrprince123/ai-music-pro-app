@@ -2,8 +2,11 @@ package com.example.ai_music_pro.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.ai_music_pro.audio.AudioOutputManager
 import com.example.ai_music_pro.data.repository.SongRepository
+import com.example.ai_music_pro.domain.model.AudioOutputDevice
 import com.example.ai_music_pro.domain.model.CarouselItem
+import com.example.ai_music_pro.domain.model.LyricLine
 import com.example.ai_music_pro.domain.model.Song
 import com.example.ai_music_pro.socket.RoomEvent
 import com.example.ai_music_pro.socket.SocketManager
@@ -20,7 +23,8 @@ import kotlinx.coroutines.flow.first
 @HiltViewModel
 class SongViewModel @Inject constructor(
     private val repository: SongRepository,
-    private val socketManager: SocketManager
+    private val socketManager: SocketManager,
+    private val audioOutputManager: AudioOutputManager
 ) : ViewModel() {
 
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
@@ -56,6 +60,21 @@ class SongViewModel @Inject constructor(
     // Room State
     private val _currentRoomId = MutableStateFlow<String?>(null)
     val currentRoomId: StateFlow<String?> = _currentRoomId.asStateFlow()
+
+    // --- Lyrics State ---
+    private val _syncedLyrics = MutableStateFlow<List<LyricLine>>(emptyList())
+    val syncedLyrics: StateFlow<List<LyricLine>> = _syncedLyrics.asStateFlow()
+
+    private val _staticLyrics = MutableStateFlow<String?>(null)
+    val staticLyrics: StateFlow<String?> = _staticLyrics.asStateFlow()
+
+    private val _lyricsLoading = MutableStateFlow(false)
+    val lyricsLoading: StateFlow<Boolean> = _lyricsLoading.asStateFlow()
+
+    // --- Audio Output State (delegated from AudioOutputManager) ---
+    val availableDevices: StateFlow<List<AudioOutputDevice>> = audioOutputManager.availableDevices
+    val activeDevice: StateFlow<AudioOutputDevice?> = audioOutputManager.activeDevice
+    val resumeAfterSwitch: StateFlow<Boolean> = audioOutputManager.resumeAfterSwitch
 
     init {
         fetchSongs()
@@ -297,6 +316,55 @@ class SongViewModel @Inject constructor(
             // Update filtered songs as well
             updateFilteredSongs(_songs.value, _searchQuery.value)
         }
+    }
+
+    // --- Lyrics Functions ---
+
+    fun loadLyrics(songId: String) {
+        viewModelScope.launch {
+            _lyricsLoading.value = true
+            _syncedLyrics.value = emptyList()
+            _staticLyrics.value = null
+
+            // Try dedicated lyrics endpoint first
+            repository.getSongLyrics(songId)
+                .onSuccess { lyricsResponse ->
+                    if (!lyricsResponse.syncedLyrics.isNullOrEmpty()) {
+                        _syncedLyrics.value = lyricsResponse.syncedLyrics
+                    }
+                    if (!lyricsResponse.lyrics.isNullOrBlank()) {
+                        _staticLyrics.value = lyricsResponse.lyrics
+                    }
+                }
+                .onFailure {
+                    // Fallback: use the song's description/lyrics field
+                    val song = _songs.value.find { it._id == songId }
+                    val fallbackText = song?.lyrics ?: song?.description
+                    if (!fallbackText.isNullOrBlank()) {
+                        _staticLyrics.value = fallbackText
+                    }
+                }
+            _lyricsLoading.value = false
+        }
+    }
+
+    fun clearLyrics() {
+        _syncedLyrics.value = emptyList()
+        _staticLyrics.value = null
+    }
+
+    // --- Audio Output Functions ---
+
+    fun switchAudioDevice(device: AudioOutputDevice) {
+        audioOutputManager.switchToDevice(device)
+    }
+
+    fun setResumeAfterSwitch(enabled: Boolean) {
+        audioOutputManager.setResumeAfterSwitch(enabled)
+    }
+
+    fun refreshAudioDevices() {
+        audioOutputManager.refreshDevices()
     }
 
     override fun onCleared() {

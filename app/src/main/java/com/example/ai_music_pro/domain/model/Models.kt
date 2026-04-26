@@ -50,6 +50,7 @@ data class Song(
     val coverUrl: String,
     val category: String,
     val description: String? = null,
+    val lyrics: String? = null,
     val playCount: Int = 0,
     val isLiked: Boolean = false
 )
@@ -91,4 +92,28 @@ data class QuickAccessItem(
     val title: String,
     val icon: androidx.compose.ui.graphics.vector.ImageVector,
     val color: androidx.compose.ui.graphics.Color
+)
+
+// --- Lyrics Models ---
+
+data class LyricLine(
+    val timeMs: Long,
+    val text: String
+)
+
+data class LyricsResponse(
+    val lyrics: String? = null,
+    val syncedLyrics: List<LyricLine>? = null
+)
+
+// --- Audio Output Models ---
+
+enum class AudioDeviceType {
+    SPEAKER, WIRED_HEADPHONES, BLUETOOTH, OTHER
+}
+
+data class AudioOutputDevice(
+    val id: Int,
+    val name: String,
+    val type: AudioDeviceType
 )

@@ -50,6 +50,7 @@ import com.google.common.util.concurrent.MoreExecutors
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -87,6 +88,16 @@ class MainActivity : ComponentActivity() {
                 val participants by songViewModel.participants.collectAsState()
                 val queue by songViewModel.queue.collectAsState()
                 
+                // Lyrics state
+                val syncedLyrics by songViewModel.syncedLyrics.collectAsState()
+                val staticLyrics by songViewModel.staticLyrics.collectAsState()
+                val lyricsLoading by songViewModel.lyricsLoading.collectAsState()
+
+                // Audio output state
+                val availableDevices by songViewModel.availableDevices.collectAsState()
+                val activeDevice by songViewModel.activeDevice.collectAsState()
+                val resumeAfterSwitch by songViewModel.resumeAfterSwitch.collectAsState()
+
                 val authState by authViewModel.authState.collectAsState()
                 
                 var showSplash by rememberSaveable { mutableStateOf(true) }
@@ -124,6 +135,8 @@ class MainActivity : ComponentActivity() {
                         playbackState = playbackState.copy(currentSong = song)
                         songViewModel.recordRecentPlay(song)
                         songViewModel.syncPlay(0L, song._id)
+                        // Load lyrics for the new song
+                        songViewModel.loadLyrics(song._id)
                     }
                 }
 
@@ -274,10 +287,13 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
                                     composable(Screen.Search.route) {
-                                        SearchScreen(onSongClick = { 
-                                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                            handleSongClick(it) 
-                                        })
+                                        SearchScreen(
+                                            onSongClick = { 
+                                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                                handleSongClick(it) 
+                                            },
+                                            onBackClick = { navController.popBackStack() }
+                                        )
                                     }
                                     composable(Screen.Library.route) {
                                         LibraryScreen(
@@ -289,17 +305,22 @@ class MainActivity : ComponentActivity() {
                                             },
                                             onAlbumClick = { albumId ->
                                                 navController.navigate(Screen.AlbumDetail.createRoute(albumId))
-                                            }
+                                            },
+                                            onBackClick = { navController.popBackStack() }
                                         )
                                     }
                                     composable(Screen.Create.route) {
-                                        CreateScreen(onComplete = { albumId ->
-                                            navController.navigate(Screen.AlbumDetail.createRoute(albumId)) {
-                                                popUpTo(Screen.Create.route) {
-                                                    inclusive = true
+                                        CreateScreen(
+                                            viewModel = hiltViewModel(),
+                                            onBackClick = { navController.popBackStack() },
+                                            onComplete = { albumId ->
+                                                navController.navigate(Screen.AlbumDetail.createRoute(albumId)) {
+                                                    popUpTo(Screen.Create.route) {
+                                                        inclusive = true
+                                                    }
                                                 }
                                             }
-                                        })
+                                        )
                                     }
                                     composable(
                                         Screen.AlbumDetail.ROUTE_WITH_ARGS,
@@ -331,7 +352,8 @@ class MainActivity : ComponentActivity() {
                                                 navController.navigate(Screen.Login.route) {
                                                     popUpTo(0) { inclusive = true }
                                                 }
-                                            }
+                                            },
+                                            onBackClick = { navController.popBackStack() }
                                         )
                                     }
 
@@ -450,6 +472,10 @@ class MainActivity : ComponentActivity() {
                                             onExpandClick = { 
                                                 haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
                                                 showPlayer = true 
+                                            },
+                                            onNextClick = {
+                                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                                controller?.seekToNext()
                                             }
                                         )
                                     }
@@ -491,7 +517,18 @@ class MainActivity : ComponentActivity() {
                                         queue = queue,
                                         allSongs = songs,
                                         onRemoveQueueItem = { songId -> songViewModel.removeQueueItem(songId) },
-                                        onLikeClick = { songId -> songViewModel.toggleLike(songId) }
+                                        onLikeClick = { songId -> songViewModel.toggleLike(songId) },
+                                        // Lyrics
+                                        syncedLyrics = syncedLyrics,
+                                        staticLyrics = staticLyrics,
+                                        lyricsLoading = lyricsLoading,
+                                        currentPositionMs = playbackState.currentPosition,
+                                        // Audio output
+                                        availableDevices = availableDevices,
+                                        activeDevice = activeDevice,
+                                        resumeAfterSwitch = resumeAfterSwitch,
+                                        onDeviceSwitch = { device -> songViewModel.switchAudioDevice(device) },
+                                        onResumeToggle = { enabled -> songViewModel.setResumeAfterSwitch(enabled) }
                                     )
                                 }
                             }
@@ -503,15 +540,29 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun checkPermissions() {
+        val permissions = mutableListOf<String>()
+
+        // Storage / media permission
         val storagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_AUDIO
         } else {
             Manifest.permission.READ_EXTERNAL_STORAGE
         }
-
         if (androidx.core.content.ContextCompat.checkSelfPermission(this, storagePermission) 
             != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            permissionLauncher.launch(arrayOf(storagePermission))
+            permissions.add(storagePermission)
+        }
+
+        // Bluetooth permission (API 31+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
+                != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
+            }
+        }
+
+        if (permissions.isNotEmpty()) {
+            permissionLauncher.launch(permissions.toTypedArray())
         } else {
             songViewModel.fetchLocalSongs(this)
         }

@@ -1,6 +1,7 @@
 package com.example.ai_music_pro.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -49,10 +50,7 @@ fun BannerSection(carousels: List<CarouselItem>) {
                     .fillMaxSize()
                     .background(
                         Brush.verticalGradient(
-                            listOf(
-                                Color.Transparent, 
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
-                            )
+                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))
                         )
                     )
             )
@@ -60,7 +58,7 @@ fun BannerSection(carousels: List<CarouselItem>) {
                 Text(
                     text = title,
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 20.sp,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.ExtraBold,
                     modifier = Modifier
                         .align(Alignment.BottomStart)

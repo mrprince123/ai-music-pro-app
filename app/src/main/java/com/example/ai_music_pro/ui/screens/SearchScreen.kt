@@ -1,6 +1,7 @@
 package com.example.ai_music_pro.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,7 +30,8 @@ import com.example.ai_music_pro.ui.viewmodel.SearchViewModel
 @Composable
 fun SearchScreen(
     viewModel: SearchViewModel = hiltViewModel(),
-    onSongClick: (com.example.ai_music_pro.domain.model.Song) -> Unit = {}
+    onSongClick: (com.example.ai_music_pro.domain.model.Song) -> Unit = {},
+    onBackClick: (() -> Unit)? = null
 ) {
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
@@ -39,27 +42,51 @@ fun SearchScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = Dimens.PaddingDefault)
     ) {
-        Spacer(modifier = Modifier.height(Dimens.PaddingDefault))
-        Text(
-            text = "Search",
-            color = MaterialTheme.colorScheme.onSurface,
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(vertical = Dimens.PaddingDefault)
-        )
+        // Top area with glass effect
+        Surface(
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.fillMaxWidth(),
+            tonalElevation = 2.dp
+        ) {
+            Column(modifier = Modifier.padding(horizontal = Dimens.PaddingDefault)) {
+                Spacer(modifier = Modifier.height(Dimens.PaddingDefault))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(vertical = Dimens.PaddingDefault / 2)
+                ) {
+                    if (onBackClick != null) {
+                        IconButton(onClick = onBackClick) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text(
+                        text = "Search",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
-        // Search Bar (New Rounded Component)
-        AppInputField(
-            value = searchQuery,
-            onValueChange = { viewModel.onQueryChange(it) },
-            placeholder = "What do you want to listen to?",
-            leadingIcon = Icons.Default.Search,
-            isSearch = true
-        )
+                // Search Bar
+                AppInputField(
+                    value = searchQuery,
+                    onValueChange = { viewModel.onQueryChange(it) },
+                    placeholder = "What do you want to listen to?",
+                    leadingIcon = Icons.Default.Search,
+                    isSearch = true
+                )
+                Spacer(modifier = Modifier.height(Dimens.PaddingDefault))
+            }
+        }
 
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.padding(horizontal = Dimens.PaddingDefault)) {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
             if (searchQuery.isEmpty()) {
                 if (searchHistory.isNotEmpty()) {
                     item {
@@ -108,4 +135,5 @@ fun SearchScreen(
             item { Spacer(modifier = Modifier.height(120.dp)) }
         }
     }
+}
 }

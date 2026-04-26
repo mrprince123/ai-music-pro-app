@@ -55,4 +55,8 @@ interface ApiService {
     // 5. Carousel
     @GET("/carousel")
     suspend fun getCarousels(): List<CarouselItem>
+
+    // 6. Lyrics
+    @GET("/songs/{id}/lyrics")
+    suspend fun getSongLyrics(@Path("id") id: String): LyricsResponse
 }
