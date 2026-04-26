@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -46,6 +47,8 @@ fun HomeScreen(
     onSongClick: (Song) -> Unit,
     onJoinRoom: (String) -> Unit,
     onCreateRoom: () -> Unit,
+    onCreateMusicClick: () -> Unit,
+    onQuickAccessClick: (String) -> Unit,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     onSettingsClick: () -> Unit = {},
@@ -105,6 +108,7 @@ fun HomeScreen(
                         onSyncClick = { showRoomDialog = true },
                         onSettingsClick = onSettingsClick,
                         currentRoomId = currentRoomId,
+                        onCreateMusicClick = onCreateMusicClick,
                         onBackClick = if (showAllView) { { showAllView = false } } else null
                     )
                 }
@@ -112,19 +116,6 @@ fun HomeScreen(
                 if (isInitialLoading) {
                     item { HomeShimmer() }
                 } else {
-                    // Search Bar
-                    if (!showAllView) {
-                        item {
-                            AppInputField(
-                                value = searchQuery,
-                                onValueChange = onSearchQueryChange,
-                                placeholder = "Search music...",
-                                leadingIcon = Icons.Default.Search,
-                                isSearch = true,
-                                modifier = Modifier.padding(horizontal = Dimens.PaddingDefault, vertical = Dimens.PaddingSmall)
-                            )
-                        }
-                    }
 
                     // Content Logic
                     if (showAllView || searchQuery.isNotEmpty()) {
@@ -148,7 +139,7 @@ fun HomeScreen(
                                     QuickAccessItem("Your Albums", Icons.Default.MusicNote, Color(0xFFF57340)),
                                     QuickAccessItem("Trending", Icons.Default.Star, Color(0xFFE91E63))
                                 ),
-                                onItemClick = { onSearchQueryChange(it) }
+                                onItemClick = onQuickAccessClick
                             )
                         }
 
@@ -246,6 +237,7 @@ fun HeaderSection(
     onSyncClick: () -> Unit,
     onSettingsClick: () -> Unit,
     currentRoomId: String?,
+    onCreateMusicClick: () -> Unit,
     onBackClick: (() -> Unit)? = null
 ) {
     Surface(
@@ -318,6 +310,14 @@ fun HeaderSection(
                             fontWeight = FontWeight.Bold
                         )
                     }
+                }
+                IconButton(onClick = onCreateMusicClick) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Create Music",
+                        tint = LunkgemBlue,
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
                 IconButton(onClick = onSyncClick) {
                     Icon(
@@ -394,33 +394,41 @@ fun CategoryRichItem(name: String, onClick: () -> Unit) {
         Color(0xFFE91E63), Color(0xFF9C27B0), Color(0xFF673AB7), 
         Color(0xFF3F51B5), Color(0xFF009688), Color(0xFFFF9800)
     )
-    val color = remember(name) { colors[name.hashCode() % colors.size.let { if (it < 0) it + colors.size else it }] }
+    val color = remember(name) { colors[(name.hashCode() % colors.size).let { if (it < 0) it + colors.size else it }] }
 
-    Card(
-        modifier = Modifier
-            .width(160.dp)
-            .height(100.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.clickable { onClick() }
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .size(70.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
                 .background(
-                    Brush.linearGradient(
-                        listOf(color.copy(alpha = 0.7f), color)
+                    Brush.radialGradient(
+                        colors = listOf(color.copy(alpha = 0.8f), color.copy(alpha = 0.4f)),
+                        radius = 200f
                     )
-                ),
+                )
+                .background(color.copy(alpha = 0.2f))
+                .border(2.dp, Color.White.copy(alpha = 0.2f), androidx.compose.foundation.shape.CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = name.uppercase(),
-                color = Color.White,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 18.sp,
-                modifier = Modifier.padding(8.dp)
+            Image(
+                painter = painterResource(id = R.drawable.app_logo),
+                contentDescription = "Logo",
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
             )
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = name,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center
+        )
     }
 }

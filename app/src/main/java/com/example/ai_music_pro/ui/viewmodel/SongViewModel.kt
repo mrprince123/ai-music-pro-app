@@ -242,7 +242,7 @@ class SongViewModel @Inject constructor(
             _error.value = null
             repository.getSongs()
                 .onSuccess { response ->
-                    val likedIds = repository.getLikedSongs().first().map { it._id }.toSet()
+                    val likedIds = _likedSongsList.value.map { it._id }.toSet()
                     _songs.value = response.songs.map { it.copy(isLiked = likedIds.contains(it._id)) }
 
                     if (_categories.value.isEmpty()) {

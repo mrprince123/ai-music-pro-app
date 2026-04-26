@@ -73,95 +73,85 @@ fun PlayerScreen(
                 )
             )
     ) {
-        // Main Content (Artwork or Lyrics)
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = Dimens.PaddingDefault)
-                .verticalScroll(rememberScrollState())
         ) {
             // Top Bar
             PlayerTopBar(onCloseClick = onCloseClick, showLyrics = showLyrics, onLyricsToggle = { showLyrics = it })
 
-            if (showLyrics) {
-                LyricsSection(song = song)
-            } else {
-                Spacer(modifier = Modifier.height(Dimens.PaddingLarge))
-                // Artwork with scale animation
-                val artworkScale by animateFloatAsState(
-                    targetValue = if (isPlaying) 1f else 0.85f,
-                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-                    label = "artworkScale"
-                )
-                
-                AsyncImage(
-                    model = song.coverUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f)
-                        .scale(artworkScale)
-                        .clip(RoundedCornerShape(Dimens.RadiusExtraLarge))
-                )
-                Spacer(modifier = Modifier.height(Dimens.PaddingLarge))
-                // Info
-                Text(
-                    text = song.title,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Text(
-                    text = song.artist,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    fontSize = 18.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                if (!song.description.isNullOrEmpty()) {
-                    Spacer(modifier = Modifier.height(12.dp))
+            // Main Centered Content (Artwork, Text, Controls)
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (showLyrics) {
+                    LyricsSection(song = song)
+                } else {
+                    // Artwork with scale animation
+                    val artworkScale by animateFloatAsState(
+                        targetValue = if (isPlaying) 1f else 0.85f,
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                        label = "artworkScale"
+                    )
+                    
+                    AsyncImage(
+                        model = song.coverUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth(0.9f) // Slight inset to look more premium
+                            .aspectRatio(1f)
+                            .scale(artworkScale)
+                            .clip(RoundedCornerShape(Dimens.RadiusExtraLarge))
+                    )
+                    Spacer(modifier = Modifier.height(24.dp)) // Adequate spacing
+                    
+                    // Info
                     Text(
-                        text = song.description,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        fontSize = 14.sp,
+                        text = song.title,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = song.artist,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    
+                    Spacer(modifier = Modifier.height(32.dp)) // Separation before controls
+                    
+                    PlayerControls(
+                        isPlaying = isPlaying,
+                        progress = progress,
+                        elapsedTime = elapsedTime,
+                        totalTime = totalTime,
+                        onPlayPauseClick = onPlayPauseClick,
+                        onSeek = onSeek,
+                        onPreviousClick = onPreviousClick,
+                        onNextClick = onNextClick,
+                        onQueueClick = { showQueueSheet = true },
+                        isLiked = song.isLiked,
+                        onLikeClick = { onLikeClick(song._id) }
                     )
                 }
             }
-            
-            // Padding for the fixed controls
-            Spacer(modifier = Modifier.height(200.dp))
-        }
-
-        // Persistent Player Controls at the bottom
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background)
-                    )
-                )
-                .padding(Dimens.PaddingDefault)
-        ) {
-            PlayerControls(
-                isPlaying = isPlaying,
-                progress = progress,
-                elapsedTime = elapsedTime,
-                totalTime = totalTime,
-                onPlayPauseClick = onPlayPauseClick,
-                onSeek = onSeek,
-                onPreviousClick = onPreviousClick,
-                onNextClick = onNextClick,
-                onQueueClick = { showQueueSheet = true },
-                isLiked = song.isLiked,
-                onLikeClick = { onLikeClick(song._id) }
-            )
         }
 
         if (showQueueSheet) {
@@ -185,7 +175,7 @@ fun PlayerTopBar(onCloseClick: () -> Unit, showLyrics: Boolean, onLyricsToggle: 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = Dimens.PaddingDefault),
+            .padding(top = 32.dp, bottom = Dimens.PaddingDefault),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -305,11 +295,11 @@ fun LyricsSection(song: Song) {
         )
         Spacer(modifier = Modifier.height(32.dp))
         Text(
-            text = "I don't relate to you, no\n\n'Cause I'd never treat me this shitty\n\nYou made me feel like it was my fault, you were the victim...\n\nYou're the target, I'm the one who's bruised\n\nI'm the one who's always being used...",
+            text = if (!song.description.isNullOrEmpty()) song.description else "No description or lyrics available.",
             color = MaterialTheme.colorScheme.onSurface,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Black,
-            lineHeight = 36.sp
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Medium,
+            lineHeight = 30.sp
         )
     }
 }

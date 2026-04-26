@@ -41,7 +41,7 @@ fun ListScreen(
         )
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.weight(1f).fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = Dimens.PaddingDefault, vertical = Dimens.PaddingSmall)
         ) {
             if (songs.isEmpty()) {

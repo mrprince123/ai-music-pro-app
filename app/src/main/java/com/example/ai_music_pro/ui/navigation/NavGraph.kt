@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.ui.graphics.vector.ImageVector
 
 import androidx.compose.material.icons.filled.Person
@@ -31,13 +32,13 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Room : Screen("room", "Room", Icons.Default.Groups)
     object RecentList : Screen("recent_list", "Recently Played", Icons.Default.History)
     object LikedList : Screen("liked_list", "Liked Songs", Icons.Default.Favorite)
+    object TrendingList : Screen("trending_list", "Trending", Icons.Default.Star)
 }
 
 val bottomNavItems = listOf(
     Screen.Home,
     Screen.Search,
     Screen.Library,
-    Screen.Create,
     Screen.Profile
 )
 

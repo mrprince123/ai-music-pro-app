@@ -259,6 +259,15 @@ class MainActivity : ComponentActivity() {
                                             },
                                             onJoinRoom = { roomId -> songViewModel.joinRoom(roomId) },
                                             onCreateRoom = { songViewModel.createRoom() },
+                                            onCreateMusicClick = { navController.navigate(Screen.Create.route) },
+                                            onQuickAccessClick = { title ->
+                                                when(title) {
+                                                    "Recently Played" -> navController.navigate(Screen.RecentList.route)
+                                                    "Liked Songs" -> navController.navigate(Screen.LikedList.route)
+                                                    "Your Albums" -> navController.navigate(Screen.Library.route)
+                                                    "Trending" -> navController.navigate(Screen.TrendingList.route)
+                                                }
+                                            },
                                             onAddToQueue = { songId -> songViewModel.requestSong(songId) },
                                             onRefresh = { songViewModel.fetchSongs() },
                                             onLikeClick = { songId -> songViewModel.toggleLike(songId) }
@@ -394,6 +403,18 @@ class MainActivity : ComponentActivity() {
                                         ListScreen(
                                             title = "Liked Songs",
                                             songs = likedSongs,
+                                            onBackClick = { navController.popBackStack() },
+                                            onSongClick = { 
+                                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                                handleSongClick(it) 
+                                            },
+                                            onLikeClick = { songId -> songViewModel.toggleLike(songId) }
+                                        )
+                                    }
+                                    composable(Screen.TrendingList.route) {
+                                        ListScreen(
+                                            title = "Trending",
+                                            songs = songs.sortedByDescending { it.artist }.take(20),
                                             onBackClick = { navController.popBackStack() },
                                             onSongClick = { 
                                                 haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
