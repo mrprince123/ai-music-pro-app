@@ -1,28 +1,30 @@
 package com.example.ai_music_pro.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.material3.RadioButton
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import com.example.ai_music_pro.ui.viewmodel.BandState
 import com.example.ai_music_pro.ui.viewmodel.EqualizerViewModel
 import com.example.ai_music_pro.ui.viewmodel.ThemeMode
 import com.example.ai_music_pro.ui.viewmodel.ThemeViewModel
 import com.example.ai_music_pro.ui.theme.Dimens
+import com.example.ai_music_pro.ui.theme.SpotifyGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,127 +44,312 @@ fun SettingsScreen(
     
     var notifications by remember { mutableStateOf(true) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        TopAppBar(
-            title = { Text("Settings", color = MaterialTheme.colorScheme.onSurface) },
-            navigationIcon = {
-                IconButton(onClick = onBackClick) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-        )
-
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { 
+                    Text(
+                        "Settings", 
+                        color = MaterialTheme.colorScheme.onSurface, 
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    ) 
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack, 
+                            contentDescription = "Back", 
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { padding ->
         Column(
             modifier = Modifier
-                .padding(Dimens.PaddingDefault)
+                .padding(padding)
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
         ) {
-            Text(text = "Display", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(Dimens.PaddingDefault))
-            
-            ThemeButton("Dark", themeMode == ThemeMode.DARK) { themeViewModel.setTheme(ThemeMode.DARK) }
-            ThemeButton("Light", themeMode == ThemeMode.LIGHT) { themeViewModel.setTheme(ThemeMode.LIGHT) }
-            ThemeButton("System", themeMode == ThemeMode.SYSTEM) { themeViewModel.setTheme(ThemeMode.SYSTEM) }
-
-            Spacer(modifier = Modifier.height(Dimens.PaddingLarge))
-            
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "Equalizer", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Switch(checked = isEqEnabled, onCheckedChange = { eqViewModel.setEnabled(it) })
-            }
-            
-            if (isEqEnabled) {
-                Spacer(modifier = Modifier.height(Dimens.PaddingDefault))
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(Dimens.RadiusMedium)
-                ) {
-                    Column(modifier = Modifier.padding(Dimens.PaddingDefault)) {
-                        bands.forEach { band ->
-                            Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text(text = "${band.freq} Hz", color = MaterialTheme.colorScheme.onSurface, fontSize = 12.sp)
-                                    Text(text = "${band.level / 100} dB", color = MaterialTheme.colorScheme.onSurface, fontSize = 12.sp)
-                                }
-                                Slider(
-                                    value = band.level.toFloat(),
-                                    onValueChange = { eqViewModel.setBandLevel(band.bandId, it.toInt().toShort()) },
-                                    valueRange = band.min.toFloat()..band.max.toFloat(),
-                                    modifier = Modifier.height(24.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(Dimens.PaddingLarge))
-            Text(text = "Account", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(Dimens.PaddingDefault))
-            
+            // Profile Section
             currentUser?.let { user ->
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(Dimens.RadiusMedium),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.PaddingDefault)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp)
+                        .clickable { /* Profile edit? */ },
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.padding(Dimens.PaddingDefault)) {
-                        Text(text = user.name, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                        Text(text = user.email, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), fontSize = 12.sp)
+                    AsyncImage(
+                        model = user.profilePhoto ?: "https://ui-avatars.com/api/?name=${user.name}&background=random",
+                        contentDescription = "Profile Photo",
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = user.name,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "View Profile",
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            fontSize = 14.sp
+                        )
+                    }
+                    Icon(
+                        Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
+            }
+
+            SettingsGroup(title = "Display") {
+                SettingsRow(
+                    title = "Theme Mode",
+                    icon = Icons.Default.Brightness4,
+                    trailing = {
+                        ThemeSelector(
+                            currentMode = themeMode,
+                            onModeSelected = { themeViewModel.setTheme(it) }
+                        )
+                    }
+                )
+            }
+
+            SettingsGroup(title = "Audio Quality") {
+                SettingsRow(
+                    title = "Equalizer",
+                    icon = Icons.Default.GraphicEq,
+                    subtitle = if (isEqEnabled) "Custom" else "Off",
+                    onClick = { eqViewModel.setEnabled(!isEqEnabled) },
+                    trailing = {
+                        Switch(
+                            checked = isEqEnabled,
+                            onCheckedChange = { eqViewModel.setEnabled(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.colorScheme.surface,
+                                checkedTrackColor = SpotifyGreen,
+                                uncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        )
+                    }
+                )
+                
+                if (isEqEnabled) {
+                    Box(modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)) {
+                        EqualizerPanel(bands = bands, eqViewModel = eqViewModel)
                     }
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = "Push Notifications", color = MaterialTheme.colorScheme.onSurface)
-                Switch(checked = notifications, onCheckedChange = { notifications = it })
+            SettingsGroup(title = "Notifications") {
+                SettingsRow(
+                    title = "Push Notifications",
+                    icon = Icons.Default.Notifications,
+                    trailing = {
+                        Switch(
+                            checked = notifications,
+                            onCheckedChange = { notifications = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.colorScheme.surface,
+                                checkedTrackColor = SpotifyGreen,
+                                uncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        )
+                    }
+                )
             }
 
-            Spacer(modifier = Modifier.height(Dimens.PaddingLarge))
-            Text(text = "Other", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), fontSize = 14.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(Dimens.PaddingDefault))
-            Text(text = "About AI Music Pro", color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(vertical = 8.dp))
-            Text(text = "Privacy Policy", color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(vertical = 8.dp))
-            Text(text = "Terms of Service", color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(vertical = 8.dp))
-
-            Spacer(modifier = Modifier.height(Dimens.PaddingLarge))
-            Button(
-                onClick = { 
-                    authViewModel.logout()
-                    onLogout()
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.1f), contentColor = Color.Red),
-                shape = RoundedCornerShape(Dimens.RadiusMedium)
-            ) {
-                Text("Logout", fontWeight = FontWeight.Bold)
+            SettingsGroup(title = "General") {
+                SettingsRow(
+                    title = "Privacy Policy",
+                    icon = Icons.Default.PrivacyTip,
+                    onClick = { /* Navigate */ }
+                )
+                SettingsRow(
+                    title = "Terms of Service",
+                    icon = Icons.Default.Description,
+                    onClick = { /* Navigate */ }
+                )
+                SettingsRow(
+                    title = "About AI Music Pro",
+                    icon = Icons.Default.Info,
+                    subtitle = "Version 1.0.0",
+                    onClick = { /* Navigate */ }
+                )
             }
+
             Spacer(modifier = Modifier.height(32.dp))
 
+            // Logout Button
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                TextButton(
+                    onClick = {
+                        authViewModel.logout()
+                        onLogout()
+                    }
+                ) {
+                    Text(
+                        "Log out",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(48.dp))
         }
     }
 }
 
 @Composable
-fun ThemeButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
+fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Column(modifier = Modifier.padding(vertical = 12.dp)) {
+        Text(
+            text = title,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        content()
+    }
+}
+
+@Composable
+fun SettingsRow(
+    title: String,
+    icon: ImageVector,
+    subtitle: String? = null,
+    onClick: (() -> Unit)? = null,
+    trailing: @Composable (() -> Unit)? = null
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(vertical = 12.dp),
+            .heightIn(min = 64.dp)
+            .clickable(enabled = onClick != null) { onClick?.invoke() },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        RadioButton(selected = isSelected, onClick = onClick)
-        Spacer(modifier = Modifier.width(Dimens.PaddingDefault))
-        Text(text = label, color = MaterialTheme.colorScheme.onSurface)
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    fontSize = 14.sp
+                )
+            }
+        }
+        if (trailing != null) {
+            trailing()
+        }
+    }
+}
+
+@Composable
+fun ThemeSelector(
+    currentMode: ThemeMode,
+    onModeSelected: (ThemeMode) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        ThemeIcon(Icons.Default.DarkMode, currentMode == ThemeMode.DARK) { onModeSelected(ThemeMode.DARK) }
+        ThemeIcon(Icons.Default.LightMode, currentMode == ThemeMode.LIGHT) { onModeSelected(ThemeMode.LIGHT) }
+        ThemeIcon(Icons.Default.SettingsSuggest, currentMode == ThemeMode.SYSTEM) { onModeSelected(ThemeMode.SYSTEM) }
+    }
+}
+
+@Composable
+fun ThemeIcon(icon: ImageVector, isSelected: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(32.dp)
+            .clip(CircleShape)
+            .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = if (isSelected) SpotifyGreen else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            modifier = Modifier.size(18.dp)
+        )
+    }
+}
+
+@Composable
+fun EqualizerPanel(
+    bands: List<BandState>,
+    eqViewModel: EqualizerViewModel
+) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            for (band in bands) {
+                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = "${band.freq} Hz", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 12.sp)
+                        Text(text = "${band.level / 100} dB", color = SpotifyGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Slider(
+                        value = band.level.toFloat(),
+                        onValueChange = { eqViewModel.setBandLevel(band.bandId, it.toInt().toShort()) },
+                        valueRange = band.min.toFloat()..band.max.toFloat(),
+                        colors = SliderDefaults.colors(
+                            thumbColor = MaterialTheme.colorScheme.onSurface,
+                            activeTrackColor = SpotifyGreen,
+                            inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    )
+                }
+            }
+        }
     }
 }

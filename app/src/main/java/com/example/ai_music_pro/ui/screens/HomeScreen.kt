@@ -297,7 +297,7 @@ fun SpotifyTopBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 48.dp, bottom = 8.dp)
+            .padding(top = 12.dp, bottom = 8.dp)
             .padding(horizontal = 16.dp)
     ) {
         Row(
@@ -364,12 +364,10 @@ fun SpotifyTopBar(
 @Composable
 fun SpotifyQuickAccessGrid(
     items: List<QuickAccessItem>,
-    recentSongs: List<Song>,
-    onItemClick: (String) -> Unit,
-    onSongClick: (Song) -> Unit
+    onItemClick: (String) -> Unit
 ) {
     Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
-        // First: Quick access items as compact cards (2 columns)
+        // Only show the 4 fixed quick access items as compact cards (2 columns)
         val rows = items.chunked(2)
         rows.forEach { rowItems ->
             Row(
@@ -418,57 +416,6 @@ fun SpotifyQuickAccessGrid(
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-        }
-
-        // Then: Recent songs as Spotify-style compact album rows (2 col)
-        if (recentSongs.isNotEmpty()) {
-            val recentPairs = recentSongs.take(6).chunked(2)
-            recentPairs.forEach { pair ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    pair.forEach { song ->
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(56.dp)
-                                .clickable { onSongClick(song) },
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxSize(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                AsyncImage(
-                                    model = song.coverUrl,
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .fillMaxHeight()
-                                        .width(56.dp)
-                                        .clip(RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp))
-                                )
-                                Text(
-                                    text = song.title,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.padding(horizontal = 10.dp)
-                                )
-                            }
-                        }
-                    }
-                    // If odd number, fill the remaining space
-                    if (pair.size == 1) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
         }
     }
 }
