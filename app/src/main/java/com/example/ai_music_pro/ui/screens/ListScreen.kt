@@ -42,7 +42,7 @@ fun ListScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onBackClick) {
@@ -61,17 +61,6 @@ fun ListScreen(
                         modifier = Modifier.weight(1f)
                     )
                 }
-                // Optional subtle green indicator/line to match "tone"
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.dp)
-                        .background(
-                            brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
-                                colors = listOf(com.example.ai_music_pro.ui.theme.SpotifyGreen, Color.Transparent)
-                            )
-                        )
-                )
             }
         }
 
