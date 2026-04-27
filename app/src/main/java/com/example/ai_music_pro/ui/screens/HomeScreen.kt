@@ -297,7 +297,7 @@ fun SpotifyTopBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 12.dp, bottom = 8.dp)
+            .padding(top = 0.dp, bottom = 4.dp)
             .padding(horizontal = 16.dp)
     ) {
         Row(
@@ -321,7 +321,7 @@ fun SpotifyTopBar(
                             .padding(end = 4.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(SpotifyGreen.copy(alpha = 0.2f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
                     ) {
                         Text(
                             text = "LIVE",

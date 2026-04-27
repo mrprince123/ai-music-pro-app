@@ -311,7 +311,7 @@ fun HeaderSection(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "AI Music Pro",
+                            text = "EchoJam",
                             color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
