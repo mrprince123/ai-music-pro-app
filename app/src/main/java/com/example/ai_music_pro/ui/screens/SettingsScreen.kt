@@ -39,27 +39,27 @@ fun SettingsScreen(
     val isEqEnabled by eqViewModel.isEnabled.collectAsState()
     val bands by eqViewModel.bands.collectAsState()
     val authState by authViewModel.authState.collectAsState()
-    
+
     val currentUser = (authState as? com.example.ai_music_pro.ui.auth.AuthState.Success)?.user
-    
+
     var notifications by remember { mutableStateOf(true) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        "Settings", 
-                        color = MaterialTheme.colorScheme.onSurface, 
+                        "Settings",
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
-                    ) 
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack, 
-                            contentDescription = "Back", 
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -88,7 +88,8 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     AsyncImage(
-                        model = user.profilePhoto ?: "https://ui-avatars.com/api/?name=${user.name}&background=random",
+                        model = user.profilePhoto
+                            ?: "https://ui-avatars.com/api/?name=${user.name}&background=random",
                         contentDescription = "Profile Photo",
                         modifier = Modifier
                             .size(64.dp)
@@ -149,7 +150,7 @@ fun SettingsScreen(
                         )
                     }
                 )
-                
+
                 if (isEqEnabled) {
                     Box(modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)) {
                         EqualizerPanel(bands = bands, eqViewModel = eqViewModel)
@@ -293,9 +294,20 @@ fun ThemeSelector(
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        ThemeIcon(Icons.Default.DarkMode, currentMode == ThemeMode.DARK) { onModeSelected(ThemeMode.DARK) }
-        ThemeIcon(Icons.Default.LightMode, currentMode == ThemeMode.LIGHT) { onModeSelected(ThemeMode.LIGHT) }
-        ThemeIcon(Icons.Default.SettingsSuggest, currentMode == ThemeMode.SYSTEM) { onModeSelected(ThemeMode.SYSTEM) }
+        ThemeIcon(
+            Icons.Default.DarkMode,
+            currentMode == ThemeMode.DARK
+        ) { onModeSelected(ThemeMode.DARK) }
+        ThemeIcon(Icons.Default.LightMode, currentMode == ThemeMode.LIGHT) {
+            onModeSelected(
+                ThemeMode.LIGHT
+            )
+        }
+        ThemeIcon(Icons.Default.SettingsSuggest, currentMode == ThemeMode.SYSTEM) {
+            onModeSelected(
+                ThemeMode.SYSTEM
+            )
+        }
     }
 }
 
@@ -324,7 +336,11 @@ fun EqualizerPanel(
     eqViewModel: EqualizerViewModel
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                alpha = 0.3f
+            )
+        ),
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -335,12 +351,26 @@ fun EqualizerPanel(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = "${band.freq} Hz", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 12.sp)
-                        Text(text = "${band.level / 100} dB", color = SpotifyGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = "${band.freq} Hz",
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            fontSize = 12.sp
+                        )
+                        Text(
+                            text = "${band.level / 100} dB",
+                            color = SpotifyGreen,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                     Slider(
                         value = band.level.toFloat(),
-                        onValueChange = { eqViewModel.setBandLevel(band.bandId, it.toInt().toShort()) },
+                        onValueChange = {
+                            eqViewModel.setBandLevel(
+                                band.bandId,
+                                it.toInt().toShort()
+                            )
+                        },
                         valueRange = band.min.toFloat()..band.max.toFloat(),
                         colors = SliderDefaults.colors(
                             thumbColor = MaterialTheme.colorScheme.onSurface,
